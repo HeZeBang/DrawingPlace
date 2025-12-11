@@ -50,6 +50,7 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
 
       <ColorPicker
         value={selectedColor || '#000000'}
+        // swatches={[selectedColor || '#000000']}
         onValueChange={(color) => onSelectColor(color.hex)}
       >
         <Button

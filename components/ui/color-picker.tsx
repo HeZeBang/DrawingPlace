@@ -74,19 +74,20 @@ function ColorPicker({
   const [colorType, setColorType] = React.useState(type);
   const [colorHsv, setColorHsv] = React.useState<HsvaColor>(value ? getColorAsHsva(value) : { h: 0, s: 0, v: 0, a: 1 });
 
-  const handleValueChange = (color: HsvaColor) => {
-    onValueChange?.({
-      hex: hsvaToHex(colorHsv),
-      hsl: hsvaToHsla(colorHsv),
-      rgb: hsvaToRgba(colorHsv),
-    });
-
+  const handleValueChange = (color: HsvaColor) => {    
     setColorHsv(color);
+    onValueChange?.({
+      hex: hsvaToHex(color),
+      hsl: hsvaToHsla(color),
+      rgb: hsvaToRgba(color),
+    });
   };
 
   return (
     <Popover {...props}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverTrigger onClickCapture={() => {
+        setColorHsv(getColorAsHsva(value));
+      }} asChild>{children}</PopoverTrigger>
       <PopoverContent
         className={cn('w-[350px] p-0', className)}
         {...props}
