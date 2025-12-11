@@ -18,6 +18,8 @@ services:
       - CASDOOR_APP_NAME=${CASDOOR_APP_NAME}
       - CASDOOR_ORGANIZATION_NAME=${CASDOOR_ORGANIZATION_NAME}
       - DRAW_DELAY_MS=${DRAW_DELAY_MS:-5000}
+      - META_TITLE=${META_TITLE:-Drawing Place}
+      - META_DESCRIPTION=${META_DESCRIPTION:-A collaborative drawing board.}
     depends_on:
       - mongo
     restart: unless-stopped

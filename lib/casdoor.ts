@@ -1,5 +1,3 @@
-"use client";
-
 import Sdk from "casdoor-js-sdk";
 import { RuntimeConfig } from "./runtime-config";
 

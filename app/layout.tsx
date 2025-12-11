@@ -1,26 +1,27 @@
 import { Toaster } from "sonner";
-import { RuntimeConfigProvider } from "@/components/RuntimeConfigProvider";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { CasdoorSDKWrapper } from "@/components/CasdoorSDKWrapper";
 import "./globals.css";
 
-export const metadata = {
-  title: process.env.META_TITLE || "Drawing Place",
-  description: process.env.META_DESCRIPTION || "A collaborative drawing board.",
-};
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  return {
+    title: process.env.META_TITLE || "Drawing Place",
+    description: process.env.META_DESCRIPTION || "A collaborative drawing board.",
+  };
+}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const config = getRuntimeConfig();
-
   return (
     <html lang="zh-CN">
       <body>
-        <RuntimeConfigProvider config={config}>
+        <CasdoorSDKWrapper>
           {children}
-        </RuntimeConfigProvider>
+        </CasdoorSDKWrapper>
         <Toaster richColors />
       </body>
     </html>
