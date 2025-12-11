@@ -8,6 +8,7 @@ import Plate from './Plate';
 import LoginModal from './LoginModal';
 import { getCasdoorSdk } from '@/lib/casdoor';
 import { toast } from 'sonner';
+import { AppErrorCode } from '@/lib/err';
 
 let socket;
 
@@ -105,9 +106,8 @@ const Board = () => {
                 setEditable(false);
             } else {
                 // Failed: Show error message or handle failure
-                console.warn('Token not valid, result:', result);
                 // Could add a toast notification here
-                alert('Token not valid. Server returned error code: ' + result);
+                toast.error(`绘制失败：${AppErrorCode[result] || '未知错误'}`);
             }
         });
         
@@ -136,11 +136,11 @@ const Board = () => {
                     <ZoomIn className="w-4 h-4 text-muted-foreground" />
                     <span>{Math.round(ratio * 100)}%</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-[100px]">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <span>({location.x}, {location.y})</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-[100px]">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <span className={countdown > 0 ? "text-destructive font-bold" : "text-muted-foreground"}>
                         {countdown > 0 ? `${countdown}s` : 'Ready'}
