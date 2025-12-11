@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { toast } from 'sonner';
 
 const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   if (!dataSource) return null;
@@ -100,8 +101,11 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
                       setToken(data.token);
                     }
                   })
+                  .then(() => {
+                    toast.info('Token 刷新成功');
+                  })
                   .catch((error) => {
-                    console.error('Error exchanging token:', error);
+                    toast.error('Token 刷新失败: ', error.message || error);
                   })
                   .finally(() => {
                     setIsFetching(false);

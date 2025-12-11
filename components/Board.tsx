@@ -7,6 +7,7 @@ import Canvas from './Canvas';
 import Plate from './Plate';
 import LoginModal from './LoginModal';
 import { getCasdoorSdk } from '@/lib/casdoor';
+import { toast } from 'sonner';
 
 let socket;
 
@@ -76,6 +77,7 @@ const Board = () => {
         localStorage.removeItem('casdoor_user');
         localStorage.removeItem('casdoor_token');
         setUser(null);
+        toast.info('已登出');
     };
 
     const handleDraw = useCallback((params) => {
@@ -155,7 +157,7 @@ const Board = () => {
                     ) : (
                         <button onClick={handleLogin} className="flex items-center gap-1 text-primary hover:underline text-xs">
                             <LogIn className="w-4 h-4" />
-                            <span>Login</span>
+                            <span>登录</span>
                         </button>
                     )}
                 </div>
@@ -196,10 +198,14 @@ const Board = () => {
                         onSelectColor={setSelectedColor} 
                         selectedColor={selectedColor}
                     />
-                    <div className="text-muted-foreground text-xs text-center flex gap-4">
-                        <span>1. Select color & click to draw</span>
-                        <span>2. Ctrl + Scroll to zoom</span>
-                        <span>3. Middle/Right Click to Pan</span>
+                    <div className="text-xs text-center">
+                        <span className='pb-1'>GeekPie_ 秋日绘版简易教程</span>
+                        <div className="text-muted-foreground text-xs text-center flex gap-4">
+                            <span>1. 调色盘中选择颜色，点击即可绘制1个像素点。</span>
+                            <span>2. Ctrl + 滚轮/双指捏合实现缩放</span>
+                            <span>3. 中键和右键/手指拖动实现平移</span>
+                            <span>4. 每个 token 每次绘制有 {delay}s 冷却时间，快来创作吧！</span>
+                        </div>
                     </div>
                 </div>
             </div>

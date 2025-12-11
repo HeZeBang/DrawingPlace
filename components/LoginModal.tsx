@@ -25,15 +25,15 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           <span className="sr-only">Close</span>
         </button>
         <div className="flex flex-col space-y-4 text-center">
-          <h2 className="text-lg font-semibold">Login Required</h2>
+          <h2 className="text-lg font-semibold">需要登录</h2>
           <p className="text-sm text-muted-foreground">
-            You need to be logged in to draw on the board.
+            您需要登录才能在秋日画板上绘画！
           </p>
           <button
             onClick={handleLogin}
             className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
           >
-            Login with GeekPie_ Uni-Auth
+            使用 GeekPie_ Uni-Auth 登录
           </button>
         </div>
       </div>

@@ -47,15 +47,7 @@ export const initiateLogin = async () => {
   if (!sdk) return;
   
   try {
-    // Generate PKCE pair
-    const { codeVerifier, sha256 } = generatePKCE();
-    const codeChallenge = await sha256(codeVerifier);
-    
-    // Store code_verifier in sessionStorage for later use in callback
-    sessionStorage.setItem('casdoor_code_verifier', codeVerifier);
-    
-    // Trigger the standard Casdoor login flow
-    sdk.signin();
+    sdk.signinRedirect();
   } catch (error) {
     console.error('Failed to initiate login:', error);
   }
