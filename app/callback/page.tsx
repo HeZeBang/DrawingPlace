@@ -2,19 +2,21 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCasdoorSdk } from '@/lib/casdoor';
+import { useRuntimeConfigContext } from '@/components/RuntimeConfigProvider';
 import { toast } from 'sonner';
 import { Loader } from 'lucide-react';
 
 function CallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { config } = useRuntimeConfigContext();
 
     useEffect(() => {
         const sdk = getCasdoorSdk();
         sdk.exchangeForAccessToken()
             .then(async (res) => {
                 if (res && res.access_token) {
-                    //Get Token
+                    // Get Token
                     localStorage.setItem('casdoor_token', res.access_token);
 
                     // Exchange for Draw Token
@@ -53,7 +55,7 @@ function CallbackContent() {
                 console.error('登录失败', err);
                 toast.error('登录失败: ' + (err.message || err.toString()));
             });
-    }, [searchParams, router]);
+    }, [searchParams, router, config]);
 
     return (
         <div className="flex items-center justify-center h-screen w-full bg-background gap-3">

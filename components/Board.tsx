@@ -14,7 +14,7 @@ import { AppErrorCode } from '@/lib/err';
 let socket;
 
 const Board = () => {
-    const { config, loading: configLoading } = useRuntimeConfigContext();
+    const { config } = useRuntimeConfigContext();
     const [points, setPoints] = useState([]);
     const [colors, setColors] = useState([]);
     const [delay, setDelay] = useState(0);
@@ -29,10 +29,7 @@ const Board = () => {
     
     // Initialize socket and load data
     useEffect(() => {
-        // 等待配置加载完成
-        if (configLoading) return;
 
-        // 设置延迟为动态配置的值
         setDelay(config.DRAW_DELAY_MS);
 
         // Check for user
@@ -52,7 +49,6 @@ const Board = () => {
                 if (res.status) {
                     setPoints(res.data.points);
                     setColors(res.data.colors);
-                    // 使用服务器返回的延迟，或回退到配置值
                     setDelay(res.data.delay || config.DRAW_DELAY_MS);
                 }
             });
@@ -76,7 +72,7 @@ const Board = () => {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, [configLoading, config.DRAW_DELAY_MS]);
+    }, [config.DRAW_DELAY_MS]);
 
     const handleLogin = () => {
         const sdk = getCasdoorSdk();

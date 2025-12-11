@@ -1,30 +1,36 @@
 'use client';
 
-import React, { createContext, useContext, useEffect } from 'react';
-import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
+import React, { createContext, useContext, useRef } from 'react';
 import { setRuntimeConfig, reinitializeCasdoorSdk } from '@/lib/casdoor';
 import { RuntimeConfig } from '@/lib/runtime-config';
 
 const RuntimeConfigContext = createContext<{
   config: RuntimeConfig;
-  loading: boolean;
-  error: string | null;
 } | null>(null);
 
-export function RuntimeConfigProvider({ children }: { children: React.ReactNode }) {
-  const { config, loading, error } = useRuntimeConfig();
+export function RuntimeConfigProvider({ 
+  children, 
+  config 
+}: { 
+  children: React.ReactNode;
+  config: RuntimeConfig;
+}) {
+  const initialized = useRef(false);
+  const prevConfig = useRef<RuntimeConfig | null>(null);
 
-  useEffect(() => {
-    if (!loading && !error) {
-      // 设置 Casdoor 配置
-      setRuntimeConfig(config);
-      // 重新初始化 Casdoor SDK
-      reinitializeCasdoorSdk();
-    }
-  }, [config, loading, error]);
+  if (!initialized.current || prevConfig.current !== config) {
+    console.log('Initializing runtime config from server props:', {
+      serverUrl: config.CASDOOR_SERVER_URL,
+      clientId: config.CASDOOR_CLIENT_ID ? '[SET]' : '[EMPTY]',
+    });
+    setRuntimeConfig(config);
+    reinitializeCasdoorSdk();
+    initialized.current = true;
+    prevConfig.current = config;
+  }
 
   return (
-    <RuntimeConfigContext.Provider value={{ config, loading, error }}>
+    <RuntimeConfigContext.Provider value={{ config }}>
       {children}
     </RuntimeConfigContext.Provider>
   );

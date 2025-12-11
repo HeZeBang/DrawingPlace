@@ -11,7 +11,6 @@ services:
       - PORT=3000
       - MONGO_URI=mongodb://mongo:27017/place
       - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/place}
-      # Casdoor 配置环境变量
       - CASDOOR_SERVER_URL=${CASDOOR_SERVER_URL}
       - CASDOOR_CLIENT_ID=${CASDOOR_CLIENT_ID}
       - CASDOOR_CLIENT_SECRET=${CASDOOR_CLIENT_SECRET}
@@ -23,7 +22,7 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: docker.1ms.run/mongo:7.0
+    image: mongo:7.0
     container_name: drawing-place-mongo
     ports:
       - "27017:27017"

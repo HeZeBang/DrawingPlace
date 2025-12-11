@@ -10,7 +10,7 @@ export const getRuntimeConfig = () => {
     CASDOOR_CLIENT_ID: 
       process.env.CASDOOR_CLIENT_ID || 
       process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || 
-      '',
+      'default_client_id',
     
     CASDOOR_CLIENT_SECRET: 
       process.env.CASDOOR_CLIENT_SECRET || 

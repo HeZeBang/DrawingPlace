@@ -3,7 +3,6 @@
 import Sdk from "casdoor-js-sdk";
 import { RuntimeConfig } from './runtime-config';
 
-// 动态配置，将在运行时设置
 let dynamicConfig: RuntimeConfig | null = null;
 
 export const setRuntimeConfig = (config: RuntimeConfig) => {
@@ -12,13 +11,13 @@ export const setRuntimeConfig = (config: RuntimeConfig) => {
 
 export const getSdkConfig = () => {
   if (!dynamicConfig) {
-    // 返回默认配置作为回退
+    console.warn('Dynamic config not available, using default config');
     return {
       serverUrl: "https://door.casdoor.com",
-      clientId: "client_id",
-      clientSecret: "client_secret",
-      appName: "app_name",
-      organizationName: "casbin",
+      clientId: "",
+      clientSecret: "",
+      appName: "",
+      organizationName: "",
       redirectPath: "/callback",
       signinPath: "/signin",
     };
@@ -38,18 +37,33 @@ export const getSdkConfig = () => {
 let casdoorSdk: any = null;
 
 export const getCasdoorSdk = () => {
-  if (typeof window !== "undefined" && !casdoorSdk) {
+  if (typeof window !== "undefined") {
     const config = getSdkConfig();
-    casdoorSdk = new Sdk(config);
+    console.log('Getting Casdoor SDK with config:', config);
+    
+    if (!casdoorSdk || 
+        (dynamicConfig && 
+         (!casdoorSdk.config || 
+          casdoorSdk.config.clientId !== config.clientId ||
+          casdoorSdk.config.serverUrl !== config.serverUrl))) {
+      casdoorSdk = new Sdk(config);
+      casdoorSdk.config = config;
+    }
   }
   return casdoorSdk;
 };
 
-// 重新初始化 SDK（当配置更新时调用）
 export const reinitializeCasdoorSdk = () => {
   if (typeof window !== "undefined") {
     const config = getSdkConfig();
+    console.log('Reinitializing Casdoor SDK with config:', {
+      serverUrl: config.serverUrl,
+      clientId: config.clientId ? '[SET]' : '[EMPTY]',
+      appName: config.appName,
+      organizationName: config.organizationName,
+    });
     casdoorSdk = new Sdk(config);
+    casdoorSdk.config = config;
   }
   return casdoorSdk;
 };
