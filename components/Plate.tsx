@@ -24,7 +24,7 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    setToken(localStorage.getItem("draw_token"));
+    setToken(localStorage.getItem("draw_token") || "");
   }, []);
 
   useEffect(() => {

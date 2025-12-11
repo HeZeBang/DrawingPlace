@@ -58,7 +58,7 @@ const Board = () => {
       });
 
     // Connect socket
-    const token = localStorage.getItem("draw_token");
+    const token = localStorage.getItem("draw_token") || "";
     socket = io({
       auth: {
         token: token,
@@ -92,7 +92,7 @@ const Board = () => {
 
   const handleDraw = useCallback(
     (params) => {
-      const token = localStorage.getItem("draw_token");
+      const token = localStorage.getItem("draw_token") || "";
       if (!user || !token) {
         setShowLoginModal(true);
         return;
