@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node --project tsconfig.server.json server.ts",
+    "dev:port": "PORT=${PORT:-8080} ts-node --project tsconfig.server.json server.ts",
     "build": "next build",
     "start": "NODE_ENV=production ts-node --project tsconfig.server.json server.ts",
     "lint": "next lint"
