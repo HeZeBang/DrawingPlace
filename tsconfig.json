@@ -35,7 +35,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/dev/types/**/*.ts"
-  ],
+, "public/icon.typ"  ],
   "exclude": [
     "node_modules"
   ]

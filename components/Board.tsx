@@ -26,6 +26,11 @@ const Board = () => {
     const [countdown, setCountdown] = useState(0);
     const [user, setUser] = useState(null);
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [title, setTitle] = useState('Drawing Place');
+
+    useEffect(() => {
+        setTitle(process.env.META_TITLE || document.title || 'Drawing Place');
+    }, [])
     
     // Initialize socket and load data
     useEffect(() => {
@@ -204,7 +209,7 @@ const Board = () => {
                         selectedColor={selectedColor}
                     />
                     <div className="text-xs text-center">
-                        <span className='pb-1'>GeekPie_ 秋日绘版简易教程</span>
+                        <span className='pb-1'>{title} 简易教程</span>
                         <div className="text-muted-foreground text-xs text-center flex gap-4">
                             <span>1. 调色盘中选择颜色，点击即可绘制1个像素点。</span>
                             <span>2. Ctrl + 滚轮/双指捏合实现缩放</span>
