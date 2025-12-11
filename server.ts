@@ -2,7 +2,7 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
-import mongoose from 'mongoose';
+import dbConnect from './lib/db';
 import Point from './models/Point';
 import Action from './models/Action';
 import UserSession from './models/UserSession';
@@ -12,12 +12,11 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost/place';
-
-mongoose.connect(MONGO_URI).then(() => {
-  console.log('Connected to MongoDB', MONGO_URI);
+// 初始化数据库连接
+dbConnect().then(() => {
+  console.log('Connected to MongoDB');
 }).catch((err: any) => {
-  console.error('MongoDB connection (' + MONGO_URI + ') error:', err);
+  console.error('MongoDB connection error:', err);
 });
 
 async function savePoint(params: any) {
