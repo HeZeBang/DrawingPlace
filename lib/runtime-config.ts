@@ -2,42 +2,42 @@
 export const getRuntimeConfig = () => {
   return {
     // 优先使用动态变量，回退到 NEXT_PUBLIC_ 变量，最后使用默认值
-    CASDOOR_SERVER_URL: 
-      process.env.CASDOOR_SERVER_URL || 
-      process.env.NEXT_PUBLIC_CASDOOR_SERVER_URL || 
-      'https://door.casdoor.com',
-    
-    CASDOOR_CLIENT_ID: 
-      process.env.CASDOOR_CLIENT_ID || 
-      process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || 
-      'default_client_id',
-    
-    CASDOOR_CLIENT_SECRET: 
-      process.env.CASDOOR_CLIENT_SECRET || 
-      process.env.NEXT_PUBLIC_CASDOOR_CLIENT_SECRET || 
-      '',
-    
-    CASDOOR_APP_NAME: 
-      process.env.CASDOOR_APP_NAME || 
-      process.env.NEXT_PUBLIC_CASDOOR_APP_NAME || 
-      '',
-    
-    CASDOOR_ORGANIZATION_NAME: 
-      process.env.CASDOOR_ORGANIZATION_NAME || 
-      process.env.NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME || 
-      '',
-    
-    MONGO_URI_CLIENT: 
-      process.env.MONGO_URI_CLIENT || 
-      process.env.NEXT_PUBLIC_MONGO_URI || 
-      process.env.MONGO_URI || 
-      'mongodb://localhost:27017/place',
-    
+    CASDOOR_SERVER_URL:
+      process.env.CASDOOR_SERVER_URL ||
+      process.env.NEXT_PUBLIC_CASDOOR_SERVER_URL ||
+      "https://door.casdoor.com",
+
+    CASDOOR_CLIENT_ID:
+      process.env.CASDOOR_CLIENT_ID ||
+      process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID ||
+      "default_client_id",
+
+    CASDOOR_CLIENT_SECRET:
+      process.env.CASDOOR_CLIENT_SECRET ||
+      process.env.NEXT_PUBLIC_CASDOOR_CLIENT_SECRET ||
+      "",
+
+    CASDOOR_APP_NAME:
+      process.env.CASDOOR_APP_NAME ||
+      process.env.NEXT_PUBLIC_CASDOOR_APP_NAME ||
+      "",
+
+    CASDOOR_ORGANIZATION_NAME:
+      process.env.CASDOOR_ORGANIZATION_NAME ||
+      process.env.NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME ||
+      "",
+
+    MONGO_URI_CLIENT:
+      process.env.MONGO_URI_CLIENT ||
+      process.env.NEXT_PUBLIC_MONGO_URI ||
+      process.env.MONGO_URI ||
+      "mongodb://localhost:27017/place",
+
     DRAW_DELAY_MS: parseInt(
-      process.env.DRAW_DELAY_MS || 
-      process.env.NEXT_PUBLIC_DRAW_DELAY_MS || 
-      '5000', 
-      10
+      process.env.DRAW_DELAY_MS ||
+        process.env.NEXT_PUBLIC_DRAW_DELAY_MS ||
+        "5000",
+      10,
     ),
   };
 };

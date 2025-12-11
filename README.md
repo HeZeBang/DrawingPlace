@@ -53,12 +53,14 @@ DRAW_DELAY_MS=5000  # Cooldown period in milliseconds (default: 5000ms = 5s)
 ### Installation with NPM/PNPM
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/HeZeBang/DrawingPlace.git
    cd DrawingPlace
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    # or
@@ -66,12 +68,14 @@ DRAW_DELAY_MS=5000  # Cooldown period in milliseconds (default: 5000ms = 5s)
    ```
 
 3. **Configure environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Build the application**
+
    ```bash
    pnpm build
    # or
@@ -79,6 +83,7 @@ DRAW_DELAY_MS=5000  # Cooldown period in milliseconds (default: 5000ms = 5s)
    ```
 
 5. **Start the application**
+
    ```bash
    pnpm start
    # or
@@ -99,14 +104,16 @@ The application will be available at `http://localhost:3000`
 #### Using Docker Compose (Recommended)
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/HeZeBang/DrawingPlace.git
    cd DrawingPlace
    ```
 
 2. **Configure environment variables**
-   
+
    Create a `.env` file with your configuration or set environment variables directly:
+
    ```bash
    export CASDOOR_SERVER_URL=https://your-casdoor-instance.com
    export CASDOOR_CLIENT_ID=your_client_id
@@ -116,6 +123,7 @@ The application will be available at `http://localhost:3000`
    ```
 
 3. **Start with Docker Compose**
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```
@@ -132,6 +140,7 @@ The application will be available at `http://localhost:3000`
 1. **Build the Docker image or pull from ghcr.io**
 
    You can get prebuilt image from [here](https://github.com/users/HeZeBang/packages/container/package/drawingplace).
+
    ```bash
    docker build -t drawingplace .
    ```

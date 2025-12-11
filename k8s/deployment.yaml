@@ -58,20 +58,20 @@ spec:
         app: mongo
     spec:
       containers:
-      - name: mongo
-        image: mongo:7.0
-        ports:
-        - containerPort: 27017
-        env:
-        - name: MONGO_INITDB_DATABASE
-          value: place
-        volumeMounts:
-        - name: mongo-storage
-          mountPath: /data/db
+        - name: mongo
+          image: mongo:7.0
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_DATABASE
+              value: place
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
       volumes:
-      - name: mongo-storage
-        persistentVolumeClaim:
-          claimName: mongo-pvc
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -102,34 +102,34 @@ spec:
         app: drawing-place
     spec:
       imagePullSecrets:
-      - name: ghcr-secret
+        - name: ghcr-secret
       containers:
-      - name: drawing-place
-        image: ghcr.io/hezebang/drawingplace:latest
-        ports:
-        - containerPort: 3000
-        envFrom:
-        - configMapRef:
-            name: drawing-place-config
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: drawing-place
+          image: ghcr.io/hezebang/drawingplace:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: drawing-place-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
@@ -160,16 +160,16 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: drawing-place.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: drawing-place-service
-            port:
-              number: 80
+    - host: drawing-place.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: drawing-place-service
+                port:
+                  number: 80
   # tls:
   # - hosts:
   #   - drawing-place.yourdomain.com

@@ -45,7 +45,7 @@ data:
 ```yaml
 spec:
   rules:
-  - host: drawing-place.yourdomain.com  # 替换为你的域名
+    - host: drawing-place.yourdomain.com # 替换为你的域名
 ```
 
 ### 4. 部署应用
@@ -134,11 +134,13 @@ mongorestore --host localhost --port 27017 --db place /tmp/backup/place
 ### 启用 TLS
 
 1. 安装 cert-manager：
+
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
 ```
 
 2. 创建 ClusterIssuer：
+
 ```yaml
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -151,21 +153,22 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    - http01:
-        ingress:
-          class: nginx
+      - http01:
+          ingress:
+            class: nginx
 ```
 
 3. 在 Ingress 中启用 TLS：
+
 ```yaml
 metadata:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
-  - hosts:
-    - drawing-place.yourdomain.com
-    secretName: drawing-place-tls
+    - hosts:
+        - drawing-place.yourdomain.com
+      secretName: drawing-place-tls
 ```
 
 ## 🔍 故障排除

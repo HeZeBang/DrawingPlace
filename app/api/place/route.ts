@@ -1,32 +1,63 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Point from '@/models/Point';
+import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import Point from "@/models/Point";
 
 export async function GET() {
   await dbConnect();
-  
+
   const colors = [
-        '000', 'fff', 'aaa', '555',
-        'fed3c7', 'ffc4ce', 'faac8e', 'ff8b83',
-        'f44336', 'e91e63', 'e2669e', '9c27b0',
-        '673ab7', '3f51b5', '004670', '057197',
-        '2196f3', '00bcd4', '3be5db', '97fddc',
-        '167300', '37a93c', '89e642', 'd7ff07',
-        'fff6d1', 'f8cb8c', 'ffeb3b', 'ffc107',
-        'ff9800', 'ff5722', 'b83f27', '795548'
+    "000",
+    "fff",
+    "aaa",
+    "555",
+    "fed3c7",
+    "ffc4ce",
+    "faac8e",
+    "ff8b83",
+    "f44336",
+    "e91e63",
+    "e2669e",
+    "9c27b0",
+    "673ab7",
+    "3f51b5",
+    "004670",
+    "057197",
+    "2196f3",
+    "00bcd4",
+    "3be5db",
+    "97fddc",
+    "167300",
+    "37a93c",
+    "89e642",
+    "d7ff07",
+    "fff6d1",
+    "f8cb8c",
+    "ffeb3b",
+    "ffc107",
+    "ff9800",
+    "ff5722",
+    "b83f27",
+    "795548",
   ];
 
   try {
-    const points = await Point.find({}).select('-_id -create_at -update_at -__v').lean();
-    return NextResponse.json({ 
-        status: true, 
-        data: { 
-            points,
-            colors,
-            delay: process.env.DRAW_DELAY_MS ? parseInt(process.env.DRAW_DELAY_MS) / 1000 : 5
-        } 
+    const points = await Point.find({})
+      .select("-_id -create_at -update_at -__v")
+      .lean();
+    return NextResponse.json({
+      status: true,
+      data: {
+        points,
+        colors,
+        delay: process.env.DRAW_DELAY_MS
+          ? parseInt(process.env.DRAW_DELAY_MS) / 1000
+          : 5,
+      },
     });
   } catch (error) {
-    return NextResponse.json({ status: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { status: false, error: error.message },
+      { status: 500 },
+    );
   }
 }

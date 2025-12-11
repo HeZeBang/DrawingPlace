@@ -1,9 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_CLIENT || process.env.MONGO_URI || 'mongodb://localhost:27017/place';
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  process.env.MONGO_URI_CLIENT ||
+  process.env.MONGO_URI ||
+  "mongodb://localhost:27017/place";
 
 if (!MONGO_URI) {
-  throw new Error('Please define the MONGO_URI or MONGO_URI environment variable');
+  throw new Error(
+    "Please define the MONGO_URI or MONGO_URI environment variable",
+  );
 }
 
 interface CachedConnection {
@@ -31,18 +37,21 @@ async function dbConnect() {
       bufferCommands: false,
     };
 
-    console.log('Connecting to MongoDB:', MONGO_URI);
-    
-    cached.promise = mongoose.connect(MONGO_URI, opts).then((mongoose) => {
-      console.log('MongoDB connected successfully');
-      return mongoose;
-    }).catch((error) => {
-      console.error('MongoDB connection failed:', error);
-      cached.promise = null; // 重置 promise 以允许重试
-      throw error;
-    });
+    console.log("Connecting to MongoDB:", MONGO_URI);
+
+    cached.promise = mongoose
+      .connect(MONGO_URI, opts)
+      .then((mongoose) => {
+        console.log("MongoDB connected successfully");
+        return mongoose;
+      })
+      .catch((error) => {
+        console.error("MongoDB connection failed:", error);
+        cached.promise = null; // 重置 promise 以允许重试
+        throw error;
+      });
   }
-  
+
   try {
     cached.conn = await cached.promise;
     return cached.conn;

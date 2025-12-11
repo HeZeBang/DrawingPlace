@@ -1,16 +1,22 @@
-'use client';
-import React from 'react';
-import { X } from 'lucide-react';
-import { initiateLogin } from '@/lib/casdoor';
+"use client";
+import React from "react";
+import { X } from "lucide-react";
+import { initiateLogin } from "@/lib/casdoor";
 
-const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const LoginModal = ({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
   if (!isOpen) return null;
 
   const handleLogin = async () => {
     try {
       await initiateLogin();
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     }
   };
 
