@@ -23,7 +23,7 @@ export async function GET() {
         data: { 
             points,
             colors,
-            delay: process.env.NEXT_PUBLIC_DRAW_DELAY ? parseInt(process.env.NEXT_PUBLIC_DRAW_DELAY) : 5
+            delay: process.env.NEXT_PUBLIC_DRAW_DELAY_MS ? parseInt(process.env.NEXT_PUBLIC_DRAW_DELAY_MS) / 1000 : 5
         } 
     });
   } catch (error) {

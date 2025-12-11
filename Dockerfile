@@ -14,7 +14,12 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile
 # 重建源代码
 FROM base AS builder
 WORKDIR /app
+
+# 先复制依赖文件以利用缓存
 COPY --from=deps /app/node_modules ./node_modules
+COPY package.json pnpm-lock.yaml* ./
+
+# 复制源代码（在依赖之后，这样依赖变化不会影响代码层的缓存）
 COPY . .
 
 # 构建应用程序
@@ -41,6 +46,7 @@ COPY --from=builder /app/server.ts ./
 COPY --from=builder /app/models ./models
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/tsconfig.server.json ./
+COPY --from=builder /app/tsconfig.json ./
 
 # 设置正确的文件权限
 RUN chown -R nextjs:nodejs /app

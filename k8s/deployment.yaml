@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: drawing-place
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drawing-place-config
+  namespace: drawing-place
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  MONGO_URI: "mongodb://mongo:27017/place"
+  NEXT_PUBLIC_MONGO_URI: "mongodb://mongo:27017/place"
+  NEXT_PUBLIC_DRAW_DELAY_MS: "5000"
+  # GeekPie Casdoor 配置
+  NEXT_PUBLIC_CASDOOR_SERVER_URL: "https://auth.geekpie.club"
+  NEXT_PUBLIC_CASDOOR_CLIENT_ID: "bba8bd20531871c597b5"
+  NEXT_PUBLIC_CASDOOR_CLIENT_SECRET: "46be845d100954e35671595979c7aaf6f728389e"
+  NEXT_PUBLIC_CASDOOR_APP_NAME: "paintboard"
+  NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME: "geekpie"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ghcr-secret
+  namespace: drawing-place
+type: kubernetes.io/dockerconfigjson
+data:
+  # 需要替换为实际的 GitHub Token base64 编码
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7InVzZXJuYW1lIjoieW91cl9naXRodWJfdXNlcm5hbWUiLCJwYXNzd29yZCI6InlvdXJfZ2l0aHViX3Rva2VuIiwiYXV0aCI6ImJhc2U2NF9lbmNvZGVkX3VzZXJuYW1lOnBhc3N3b3JkIn19fQ==
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: drawing-place
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: drawing-place
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:7.0
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: place
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: drawing-place
+spec:
+  selector:
+    app: mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drawing-place
+  namespace: drawing-place
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: drawing-place
+  template:
+    metadata:
+      labels:
+        app: drawing-place
+    spec:
+      imagePullSecrets:
+      - name: ghcr-secret
+      containers:
+      - name: drawing-place
+        image: ghcr.io/hezebang/drawingplace:latest
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: drawing-place-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drawing-place-service
+  namespace: drawing-place
+spec:
+  selector:
+    app: drawing-place
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: drawing-place-ingress
+  namespace: drawing-place
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # 支持 WebSocket
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: drawing-place.yourdomain.com  # 替换为实际域名
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: drawing-place-service
+            port:
+              number: 80
+  # 如果需要 TLS，取消注释以下内容
+  # tls:
+  # - hosts:
+  #   - drawing-place.yourdomain.com
+  #   secretName: drawing-place-tls

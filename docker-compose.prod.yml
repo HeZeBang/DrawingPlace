@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: mongo:7.0
+    image: docker.1ms.run/mongo:7.0
     container_name: drawing-place-mongo
     ports:
       - "27017:27017"
