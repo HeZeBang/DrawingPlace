@@ -1,10 +1,10 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const { Server } = require('socket.io');
-const mongoose = require('mongoose');
-const Point = require('./models/Point');
-const Action = require('./models/Action');
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
+import { Server } from 'socket.io';
+import mongoose from 'mongoose';
+import Point from './models/Point';
+import Action from './models/Action';
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -14,11 +14,11 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost/place';
 
 mongoose.connect(MONGO_URI).then(() => {
   console.log('Connected to MongoDB');
-}).catch(err => {
+}).catch((err: any) => {
   console.error('MongoDB connection error:', err);
 });
 
-async function savePoint(params) {
+async function savePoint(params: any) {
     const { x, y, w, h, c, user } = params;
     try {
         let data = await Point.findOne({ x, y });
@@ -42,7 +42,7 @@ async function savePoint(params) {
     }
 }
 
-async function createAction(params) {
+async function createAction(params: any) {
     const { point, user } = params;
     try {
         await Action.create({
@@ -57,7 +57,7 @@ async function createAction(params) {
 
 app.prepare().then(() => {
   const server = createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
+    const parsedUrl = parse(req.url!, true);
     handle(req, res, parsedUrl);
   });
 
@@ -101,8 +101,7 @@ app.prepare().then(() => {
     });
   });
 
-  server.listen(3000, (err) => {
-    if (err) throw err;
+  server.listen(3000, () => {
     console.log('> Ready on http://localhost:3000');
   });
 });
