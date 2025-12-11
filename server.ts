@@ -12,12 +12,12 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const MONGO_URI = process.env.NEXT_PUBLIC_MONGO_URI || 'mongodb://localhost/place';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost/place';
 
 mongoose.connect(MONGO_URI).then(() => {
-  console.log('Connected to MongoDB');
+  console.log('Connected to MongoDB', MONGO_URI);
 }).catch((err: any) => {
-  console.error('MongoDB connection error:', err);
+  console.error('MongoDB connection (' + MONGO_URI + ') error:', err);
 });
 
 async function savePoint(params: any) {
