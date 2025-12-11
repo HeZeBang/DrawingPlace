@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   if (!dataSource) return null;
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState("");
   const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
