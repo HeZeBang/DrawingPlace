@@ -1,11 +1,17 @@
-'use client';;
+'use client';
+
+import type { PopoverContentProps } from '@radix-ui/react-popover';
 import {
+  type HexColor,
   hexToHsva,
+  type HslaColor,
   hslaToHsva,
+  type HsvaColor,
   hsvaToHex,
   hsvaToHsla,
   hsvaToHslString,
   hsvaToRgba,
+  type RgbaColor,
   rgbaToHsva,
 } from '@uiw/color-convert';
 import Hue from '@uiw/react-color-hue';
@@ -13,7 +19,7 @@ import Saturation from '@uiw/react-color-saturation';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
 import React from 'react';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,7 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-function getColorAsHsva(color) {
+function getColorAsHsva(color: `#${string}` | HsvaColor | HslaColor | RgbaColor): HsvaColor {
   if (typeof color === 'string') {
     return hexToHsva(color);
   } else if ('h' in color && 's' in color && 'v' in color) {
@@ -38,6 +44,22 @@ function getColorAsHsva(color) {
   }
 }
 
+type ColorPickerValue = {
+  hex: string;
+  hsl: HslaColor;
+  rgb: RgbaColor;
+};
+
+type ColorPickerProps = {
+  value?: `#${string}` | HsvaColor | HslaColor | RgbaColor;
+  type?: 'hsl' | 'rgb' | 'hex';
+  swatches?: HexColor[];
+  hideContrastRatio?: boolean;
+  hideDefaultSwatches?: boolean;
+  className?: string;
+  onValueChange?: (value: ColorPickerValue) => void;
+} & PopoverContentProps;
+
 function ColorPicker({
   value,
   children,
@@ -48,23 +70,18 @@ function ColorPicker({
   onValueChange,
   className,
   ...props
-}) {
+}: ColorPickerProps) {
   const [colorType, setColorType] = React.useState(type);
-  const [colorHsv, setColorHsv] = React.useState(value ? getColorAsHsva(value) : { h: 0, s: 0, v: 0, a: 1 });
+  const [colorHsv, setColorHsv] = React.useState<HsvaColor>(value ? getColorAsHsva(value) : { h: 0, s: 0, v: 0, a: 1 });
 
-  React.useEffect(() => {
-    if (value) {
-      setColorHsv(getColorAsHsva(value));
-    }
-  }, [value]);
-
-  const handleValueChange = (color) => {
-    setColorHsv(color);
+  const handleValueChange = (color: HsvaColor) => {
     onValueChange?.({
-      hex: hsvaToHex(color),
-      hsl: hsvaToHsla(color),
-      rgb: hsvaToRgba(color),
+      hex: hsvaToHex(colorHsv),
+      hsl: hsvaToHsla(colorHsv),
+      rgb: hsvaToRgba(colorHsv),
     });
+
+    setColorHsv(color);
   };
 
   return (
@@ -75,9 +92,10 @@ function ColorPicker({
         {...props}
         style={
           {
-            '--selected-color': hsvaToHslString(colorHsv)
-          }
-        }>
+            '--selected-color': hsvaToHslString(colorHsv),
+          } as React.CSSProperties
+        }
+      >
         <div className="space-y-2 p-4">
           <Saturation
             hsva={colorHsv}
@@ -90,7 +108,8 @@ function ColorPicker({
               aspectRatio: '4/2',
               borderRadius: '0.3rem',
             }}
-            className="border border-border" />
+            className="border border-border"
+          />
           <Hue
             hue={colorHsv.h}
             onChange={(newHue) => {
@@ -102,20 +121,17 @@ function ColorPicker({
                 width: '100%',
                 height: '0.9rem',
                 borderRadius: '0.3rem',
-                '--alpha-pointer-background-color': 'hsl(var(--foreground))'
-              }
-            } />
+                '--alpha-pointer-background-color': 'hsl(var(--foreground))',
+              } as React.CSSProperties
+            }
+          />
 
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="shrink-0 justify-between uppercase">
                   {colorType}
-                  <ChevronDownIcon
-                    className="-me-1 ms-2 opacity-60"
-                    size={16}
-                    strokeWidth={2}
-                    aria-hidden="true" />
+                  <ChevronDownIcon className="-me-1 ms-2 opacity-60" size={16} strokeWidth={2} aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -136,24 +152,27 @@ function ColorPicker({
                   value={hsvaToHsla(colorHsv)}
                   label="hsl"
                   onValueChange={(value) => {
-                    handleValueChange(hslaToHsva(value));
-                  }} />
+                    setColorHsv(hslaToHsva(value));
+                  }}
+                />
               )}
               {colorType === 'rgb' && (
                 <ObjectColorInput
                   value={hsvaToRgba(colorHsv)}
                   label="rgb"
                   onValueChange={(value) => {
-                    handleValueChange(rgbaToHsva(value));
-                  }} />
+                    setColorHsv(rgbaToHsva(value));
+                  }}
+                />
               )}
               {colorType === 'hex' && (
                 <Input
                   className="flex"
                   value={hsvaToHex(colorHsv)}
                   onChange={(e) => {
-                    handleValueChange(hexToHsva(e.target.value));
-                  }} />
+                    setColorHsv(hexToHsva(e.target.value));
+                  }}
+                />
               )}
             </div>
           </div>
@@ -168,13 +187,14 @@ function ColorPicker({
                     key={`${color}-swatch`}
                     style={
                       {
-                        '--swatch-color': color
-                      }
+                        '--swatch-color': color,
+                      } as React.CSSProperties
                     }
-                    onClick={() => handleValueChange(hexToHsva(color))}
-                    onKeyUp={(e) => (e.key === 'Enter' ? handleValueChange(hexToHsva(color)) : null)}
+                    onClick={() => setColorHsv(hexToHsva(color))}
+                    onKeyUp={(e) => (e.key === 'Enter' ? setColorHsv(hexToHsva(color)) : null)}
                     aria-label={`Set color to ${color}`}
-                    className="size-5 cursor-pointer rounded bg-[var(--swatch-color)] ring-2 ring-[var(--swatch-color)00] ring-offset-1 ring-offset-background transition-all duration-100 hover:ring-[var(--swatch-color)]" />
+                    className="size-5 cursor-pointer rounded bg-[var(--swatch-color)] ring-2 ring-[var(--swatch-color)00] ring-offset-1 ring-offset-background transition-all duration-100 hover:ring-[var(--swatch-color)]"
+                  />
                 ))}
             </div>
           )}
@@ -190,16 +210,18 @@ function ColorPicker({
   );
 }
 
-function ContrastRatio({
-  color
-}) {
+type ContrastRatioProps = {
+  color: HsvaColor;
+};
+
+function ContrastRatio({ color }: ContrastRatioProps) {
   const [darkModeContrastRatio, setDarkModeContrastValue] = React.useState(0);
   const [lightModeContrastValue, setLightModeContrastValue] = React.useState(0);
 
   React.useEffect(() => {
     const rgb = hsvaToRgba(color);
 
-    const toSRGB = (c) => {
+    const toSRGB = (c: number) => {
       const channel = c / 255;
       return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
     };
@@ -223,15 +245,19 @@ function ContrastRatio({
     className,
     children,
     ...props
-  }) => (
+  }: {
+    ratio: number;
+    ratioLimit: number;
+  } & Omit<BadgeProps, 'variant'>) => (
     <Badge
       variant="outline"
       className={cn(
         'gap-2 rounded-full text-muted-foreground',
         ratio > ratioLimit && 'border-transparent bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-        className
+        className,
       )}
-      {...props}>
+      {...props}
+    >
       {ratio > 4.5 ? <CheckIcon size={16} /> : <XIcon size={16} />}
       {children}
     </Badge>
@@ -240,8 +266,7 @@ function ContrastRatio({
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
-        <div
-          className="flex size-10 items-center justify-center rounded bg-[var(--selected-color)]">
+        <div className="flex size-10 items-center justify-center rounded bg-[var(--selected-color)]">
           <span className="font-medium text-black dark:text-white">A</span>
         </div>
         <div className="flex flex-col justify-between">
@@ -257,10 +282,7 @@ function ContrastRatio({
         <ValidationBadge className="dark:hidden" ratio={lightModeContrastValue} ratioLimit={7}>
           AAA
         </ValidationBadge>
-        <ValidationBadge
-          className="hidden dark:flex"
-          ratio={darkModeContrastRatio}
-          ratioLimit={4.5}>
+        <ValidationBadge className="hidden dark:flex" ratio={darkModeContrastRatio} ratioLimit={4.5}>
           AA
         </ValidationBadge>
         <ValidationBadge className="hidden dark:flex" ratio={darkModeContrastRatio} ratioLimit={7}>
@@ -271,12 +293,20 @@ function ContrastRatio({
   );
 }
 
-function ObjectColorInput({
-  value,
-  label,
-  onValueChange
-}) {
-  function handleChange(val) {
+type ObjectColorInputProps =
+  | {
+      label: 'hsl';
+      value: HslaColor;
+      onValueChange?: (value: HslaColor) => void;
+    }
+  | {
+      label: 'rgb';
+      value: RgbaColor;
+      onValueChange?: (value: RgbaColor) => void;
+    };
+
+function ObjectColorInput({ value, label, onValueChange }: ObjectColorInputProps) {
+  function handleChange(val: HslaColor | RgbaColor) {
     if (onValueChange) {
       label === 'hsl'
         ? onValueChange({
@@ -300,7 +330,8 @@ function ObjectColorInput({
               ...value,
               [label === 'hsl' ? 'h' : 'r']: e.target.value,
             })
-          } />
+          }
+        />
       </div>
       <div className="relative -ms-px min-w-0 flex-1 focus-within:z-10">
         <Input
@@ -311,7 +342,8 @@ function ObjectColorInput({
               ...value,
               [label === 'hsl' ? 's' : 'g']: e.target.value,
             })
-          } />
+          }
+        />
       </div>
       <div className="relative -ms-px min-w-0 flex-1 focus-within:z-10">
         <Input
@@ -322,10 +354,12 @@ function ObjectColorInput({
               ...value,
               [label === 'hsl' ? 'l' : 'b']: e.target.value,
             })
-          } />
+          }
+        />
       </div>
     </div>
   );
 }
 
 export { ColorPicker };
+export type { ColorPickerProps, ColorPickerValue };
