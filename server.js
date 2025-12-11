@@ -70,6 +70,12 @@ app.prepare().then(() => {
         // console.log('draw', params);
         const { user, data } = params;
         
+        // Basic auth check
+        if (!user || (!user.name && !user.username)) {
+            if (cb) cb(false);
+            return;
+        }
+
         // Broadcast to others
         socket.broadcast.emit('draw', data);
         
@@ -77,7 +83,7 @@ app.prepare().then(() => {
 
         // Save to DB
         // Assuming user object has username, or just use a default if not present
-        const username = user ? user.username : 'anonymous';
+        const username = user.displayName || user.name || user.username || 'anonymous';
         
         createAction({
             point: data,

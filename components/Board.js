@@ -2,9 +2,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { ZoomIn, MapPin, Clock } from 'lucide-react';
+import { ZoomIn, MapPin, Clock, LogIn, LogOut } from 'lucide-react';
 import Canvas from './Canvas';
 import Plate from './Plate';
+import LoginModal from './LoginModal';
+import { getCasdoorSdk } from '@/lib/casdoor';
 
 let socket;
 
@@ -18,9 +20,21 @@ const Board = () => {
     const [ratio, setRatio] = useState(1);
     const [editable, setEditable] = useState(true);
     const [countdown, setCountdown] = useState(0);
+    const [user, setUser] = useState(null);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     
     // Initialize socket and load data
     useEffect(() => {
+        // Check for user
+        const storedUser = localStorage.getItem('casdoor_user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error('Invalid user data');
+            }
+        }
+
         // Load initial data
         fetch('/api/place')
             .then(res => res.json())
@@ -49,7 +63,23 @@ const Board = () => {
         };
     }, []);
 
+    const handleLogin = () => {
+        const sdk = getCasdoorSdk();
+        sdk.signin_redirect();
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('casdoor_user');
+        localStorage.removeItem('casdoor_token');
+        setUser(null);
+    };
+
     const handleDraw = useCallback((params) => {
+        if (!user) {
+            setShowLoginModal(true);
+            return;
+        }
+
         if (!editable) return;
 
         // Optimistic update
@@ -57,7 +87,7 @@ const Board = () => {
         
         // Emit to server
         socket.emit('draw', {
-            user: { username: 'anonymous' }, // Replace with real user if auth implemented
+            user: user,
             data: params
         });
 
@@ -76,7 +106,7 @@ const Board = () => {
             });
         }, 1000);
 
-    }, [editable, delay]);
+    }, [editable, delay, user]);
 
     const handleMove = (loc) => {
         setLocation(loc);
@@ -99,6 +129,21 @@ const Board = () => {
                     <span className={countdown > 0 ? "text-destructive font-bold" : "text-muted-foreground"}>
                         {countdown > 0 ? `${countdown}s` : 'Ready'}
                     </span>
+                </div>
+                <div className="flex items-center gap-2 ml-4 border-l pl-4">
+                    {user ? (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs truncate max-w-[100px]">{user.displayName || user.name || user.username}</span>
+                            <button onClick={handleLogout} title="Logout" className="text-muted-foreground hover:text-foreground">
+                                <LogOut className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <button onClick={handleLogin} className="flex items-center gap-1 text-primary hover:underline text-xs">
+                            <LogIn className="w-4 h-4" />
+                            <span>Login</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -126,6 +171,7 @@ const Board = () => {
                         </div>
                     </TransformComponent>
                 </TransformWrapper>
+                <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
             </div>
 
             {/* Bottom Control Area */}
