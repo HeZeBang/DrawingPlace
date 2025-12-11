@@ -155,7 +155,7 @@ const Board = () => {
                     maxScale={20}
                     centerOnInit={true}
                     wheel={{ step: 0.1, activationKeys: ['Control'] }}
-                    panning={{ mouseButtons: [1, 2] }} // Middle or Right click to pan
+                    panning={{ allowLeftClickPan: false, allowMiddleClickPan: true, allowRightClickPan: true }} // Middle or Right click to pan
                     onTransformed={(e) => setRatio(e.state.scale)}
                     doubleClick={{ disabled: true }}
                 >
