@@ -1,15 +1,17 @@
 'use client';
 import React from 'react';
 import { X } from 'lucide-react';
-import { getCasdoorSdk } from '@/lib/casdoor';
+import { initiateLogin } from '@/lib/casdoor';
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
-  const handleLogin = () => {
-    // Get the signin URL and redirect
-    const signinUrl = getCasdoorSdk().getSigninUrl();
-    window.location.href = signinUrl;
+  const handleLogin = async () => {
+    try {
+      await initiateLogin();
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
   return (
