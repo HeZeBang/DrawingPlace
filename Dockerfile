@@ -30,11 +30,13 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-    # 复制构建输出和依赖
-    COPY --from=builder /app/.next ./.next
-    COPY --from=builder /app/public ./public
-    COPY --from=builder /app/node_modules ./node_modules
-    COPY --from=builder /app/package.json ./package.json# 复制自定义服务器相关文件
+# 复制构建输出和依赖
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# 复制自定义服务器相关文件
 COPY --from=builder /app/server.ts ./
 COPY --from=builder /app/models ./models
 COPY --from=builder /app/lib ./lib
