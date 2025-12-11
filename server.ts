@@ -5,6 +5,8 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import Point from './models/Point';
 import Action from './models/Action';
+import UserSession from './models/UserSession';
+import { AppErrorCode } from './lib/err';
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -63,27 +65,73 @@ app.prepare().then(() => {
 
   const io = new Server(server);
 
+  // Rate limiting map
+  const rateLimits = new Map<string, number>();
+
+  // Socket authentication middleware
+  io.use(async (socket, next) => {
+      const token = socket.handshake.auth.token;
+      if (token) {
+          try {
+              const session = await UserSession.findOne({ token });
+              if (session) {
+                  socket.data.token = token;
+              }
+          } catch (e) {
+              console.error("Auth error", e);
+          }
+      }
+      next();
+  });
+
   io.on('connection', (socket) => {
     console.log('Client connected');
 
     socket.on('draw', async (params, cb) => {
-        // console.log('draw', params);
-        const { user, data } = params;
+        const { token, data } = params;
         
-        // Basic auth check
-        if (!user || (!user.name && !user.username)) {
-            if (cb) cb(false);
-            return;
+        // Auth check - verify token from message
+        let user: { id: string, token: string } | null = null;
+        if (token) {
+            try {
+                const session = await UserSession.findOne({ token });
+                if (session) {
+                    user = { id: session.userId, token: token };
+                } else {
+                  if(cb) cb(AppErrorCode.InvalidToken);
+                  return;
+                }
+            } catch (e) {
+                console.error("Token verification error", e);
+                if(cb) cb(AppErrorCode.UnknownError);
+                return;
+            }
+        } else {
+          console.error("No token provided");
+          if(cb) cb(AppErrorCode.InvalidRequest);
+          return;
         }
 
-        // Broadcast to others
+        console.log(`Draw action from user ${user.id}, token ${user.token}:`, data);
+
+        // Rate limit check
+        const lastTime = rateLimits.get(user.token) || 0;
+        const now = Date.now();
+        console.log(`Last draw time for user ${user.id}: ${lastTime} (now: ${now})`);
+        if (now - lastTime < 5000) {
+             if (cb) cb( Math.ceil((5000 - (now - lastTime)) / 1000) ); // return remaining seconds
+             return;
+        }
+        rateLimits.set(user.token, now);
+        console.log(`Updated last draw time for user ${user.id} to ${now}`);
+
+        // Broadcast to others(including self)
         socket.broadcast.emit('draw', data);
         
-        if (cb) cb(true);
+        if (cb) cb(AppErrorCode.Success);
 
         // Save to DB
-        // Assuming user object has username, or just use a default if not present
-        const username = user.displayName || user.name || user.username || 'anonymous';
+        const username = user.id;
         
         createAction({
             point: data,

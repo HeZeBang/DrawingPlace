@@ -47,8 +47,12 @@ const Board = () => {
             });
 
         // Connect socket
-        // We need to connect to the same host
-        socket = io();
+        const token = localStorage.getItem('draw_token');
+        socket = io({
+            auth: {
+                token: token
+            }
+        });
 
         socket.on('connect', () => {
             console.log('Connected to socket');
@@ -75,25 +79,35 @@ const Board = () => {
     };
 
     const handleDraw = useCallback((params) => {
-        if (!user) {
+        const token = localStorage.getItem('draw_token');
+        if (!user || !token) {
             setShowLoginModal(true);
             return;
         }
 
         if (!editable) return;
 
-        // Optimistic update
-        setPoints(prev => [...prev, params]);
-        
-        // Emit to server
+        // Emit to server with token and handle response
         socket.emit('draw', {
-            user: user,
+            token: token,
             data: params
+        }, (result: number) => {
+            if (result === 0) {
+                // Success: Add point and start delay
+                setPoints(prev => [...prev, params]);
+                setEditable(false);
+                setCountdown(delay);
+            } else if (result > 0) {
+                // Handle rate limit countdown
+                setCountdown(result);
+                setEditable(false);
+            } else {
+                // Failed: Show error message or handle failure
+                console.warn('Token not valid, result:', result);
+                // Could add a toast notification here
+                alert('Token not valid. Server returned error code: ' + result);
+            }
         });
-
-        // Start delay
-        setEditable(false);
-        setCountdown(delay);
         
         const timer = setInterval(() => {
             setCountdown(prev => {
