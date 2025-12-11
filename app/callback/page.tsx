@@ -14,28 +14,6 @@ export default function CallbackPage() {
                 if (res && res.access_token) {
                     //Get Token
                     localStorage.setItem('casdoor_token', res.access_token);
-
-                    // Exchange for Draw Token
-                    try {
-                        const response = await fetch('/api/auth/exchange', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ token: res.access_token })
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.token) {
-                                console.log("Draw token received", data.token);
-                                localStorage.setItem('draw_token', data.token);
-                            }
-                        }
-                    } catch (e) {
-                        console.error("Token exchange failed", e);
-                    }
-
                     return sdk.getUserInfo(res.access_token);
                 }
             })
