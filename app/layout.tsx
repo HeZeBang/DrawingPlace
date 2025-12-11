@@ -1,4 +1,5 @@
 import { Toaster } from 'sonner'
+import { RuntimeConfigProvider } from '@/components/RuntimeConfigProvider'
 import './globals.css'
 
 export const metadata = {
@@ -10,7 +11,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        {children}
+        <RuntimeConfigProvider>
+          {children}
+        </RuntimeConfigProvider>
         <Toaster richColors />
       </body>
     </html>

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCasdoorSdk, sdkConfig } from '@/lib/casdoor';
+import { getCasdoorSdk } from '@/lib/casdoor';
 import { toast } from 'sonner';
 import { Loader } from 'lucide-react';
 

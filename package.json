@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.25.0",
   "scripts": {
     "dev": "ts-node --project tsconfig.server.json server.ts",
+    "dev:dynamic": "./dev-dynamic.sh",
     "dev:port": "PORT=${PORT:-8080} ts-node --project tsconfig.server.json server.ts",
     "build": "next build",
     "start": "NODE_ENV=production ts-node --project tsconfig.server.json server.ts",

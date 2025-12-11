@@ -31,11 +31,11 @@ kubectl create secret docker-registry ghcr-secret \
 
 ```yaml
 data:
-  NEXT_PUBLIC_CASDOOR_SERVER_URL: "https://your-casdoor-server.com"
-  NEXT_PUBLIC_CASDOOR_CLIENT_ID: "your_actual_client_id"
-  NEXT_PUBLIC_CASDOOR_CLIENT_SECRET: "your_actual_client_secret"
-  NEXT_PUBLIC_CASDOOR_APP_NAME: "your_actual_app_name"
-  NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME: "your_organization"
+  CASDOOR_SERVER_URL: "https://your-casdoor-server.com"
+  CASDOOR_CLIENT_ID: "your_actual_client_id"
+  CASDOOR_CLIENT_SECRET: "your_actual_client_secret"
+  CASDOOR_APP_NAME: "your_actual_app_name"
+  CASDOOR_ORGANIZATION_NAME: "your_organization"
 ```
 
 ### 3. 配置域名

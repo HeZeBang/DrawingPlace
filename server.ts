@@ -117,7 +117,7 @@ app.prepare().then(() => {
         const lastTime = rateLimits.get(user.token) || 0;
         const now = Date.now();
         console.log(`Last draw time for user ${user.id}: ${lastTime} (now: ${now})`);
-        const delay = (process.env.NEXT_PUBLIC_DRAW_DELAY_MS ? parseInt(process.env.NEXT_PUBLIC_DRAW_DELAY_MS) : 3000);
+        const delay = (process.env.DRAW_DELAY_MS ? parseInt(process.env.DRAW_DELAY_MS) : 5000);
         if (now - lastTime < delay) {
              if (cb) cb( Math.ceil((delay - (now - lastTime)) / 1000) ); // return remaining seconds
              return;

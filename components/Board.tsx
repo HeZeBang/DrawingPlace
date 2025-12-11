@@ -7,12 +7,14 @@ import Canvas from './Canvas';
 import Plate from './Plate';
 import LoginModal from './LoginModal';
 import { getCasdoorSdk } from '@/lib/casdoor';
+import { useRuntimeConfigContext } from './RuntimeConfigProvider';
 import { toast } from 'sonner';
 import { AppErrorCode } from '@/lib/err';
 
 let socket;
 
 const Board = () => {
+    const { config, loading: configLoading } = useRuntimeConfigContext();
     const [points, setPoints] = useState([]);
     const [colors, setColors] = useState([]);
     const [delay, setDelay] = useState(0);
@@ -27,6 +29,12 @@ const Board = () => {
     
     // Initialize socket and load data
     useEffect(() => {
+        // 等待配置加载完成
+        if (configLoading) return;
+
+        // 设置延迟为动态配置的值
+        setDelay(config.DRAW_DELAY_MS);
+
         // Check for user
         const storedUser = localStorage.getItem('casdoor_user');
         if (storedUser) {
@@ -44,7 +52,8 @@ const Board = () => {
                 if (res.status) {
                     setPoints(res.data.points);
                     setColors(res.data.colors);
-                    setDelay(res.data.delay);
+                    // 使用服务器返回的延迟，或回退到配置值
+                    setDelay(res.data.delay || config.DRAW_DELAY_MS);
                 }
             });
 
@@ -67,7 +76,7 @@ const Board = () => {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, []);
+    }, [configLoading, config.DRAW_DELAY_MS]);
 
     const handleLogin = () => {
         const sdk = getCasdoorSdk();

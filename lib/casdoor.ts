@@ -1,22 +1,55 @@
 "use client";
 
 import Sdk from "casdoor-js-sdk";
+import { RuntimeConfig } from './runtime-config';
 
-export const sdkConfig = {
-  serverUrl: process.env.NEXT_PUBLIC_CASDOOR_SERVER_URL || "https://door.casdoor.com",
-  clientId: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || "client_id",
-  clientSecret: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_SECRET || "client_secret",
-  appName: process.env.NEXT_PUBLIC_CASDOOR_APP_NAME || "app_name",
-  organizationName: process.env.NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME || "casbin",
-  redirectPath: "/callback",
-  signinPath: "/signin",
+// 动态配置，将在运行时设置
+let dynamicConfig: RuntimeConfig | null = null;
+
+export const setRuntimeConfig = (config: RuntimeConfig) => {
+  dynamicConfig = config;
+};
+
+export const getSdkConfig = () => {
+  if (!dynamicConfig) {
+    // 返回默认配置作为回退
+    return {
+      serverUrl: "https://door.casdoor.com",
+      clientId: "client_id",
+      clientSecret: "client_secret",
+      appName: "app_name",
+      organizationName: "casbin",
+      redirectPath: "/callback",
+      signinPath: "/signin",
+    };
+  }
+
+  return {
+    serverUrl: dynamicConfig.CASDOOR_SERVER_URL,
+    clientId: dynamicConfig.CASDOOR_CLIENT_ID,
+    clientSecret: dynamicConfig.CASDOOR_CLIENT_SECRET,
+    appName: dynamicConfig.CASDOOR_APP_NAME,
+    organizationName: dynamicConfig.CASDOOR_ORGANIZATION_NAME,
+    redirectPath: "/callback",
+    signinPath: "/signin",
+  };
 };
 
 let casdoorSdk: any = null;
 
 export const getCasdoorSdk = () => {
   if (typeof window !== "undefined" && !casdoorSdk) {
-    casdoorSdk = new Sdk(sdkConfig);
+    const config = getSdkConfig();
+    casdoorSdk = new Sdk(config);
+  }
+  return casdoorSdk;
+};
+
+// 重新初始化 SDK（当配置更新时调用）
+export const reinitializeCasdoorSdk = () => {
+  if (typeof window !== "undefined") {
+    const config = getSdkConfig();
+    casdoorSdk = new Sdk(config);
   }
   return casdoorSdk;
 };

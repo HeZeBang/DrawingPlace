@@ -12,14 +12,14 @@ data:
   NODE_ENV: "production"
   PORT: "3000"
   MONGO_URI: "mongodb://mongo:27017/place"
-  NEXT_PUBLIC_MONGO_URI: "mongodb://mongo:27017/place"
-  NEXT_PUBLIC_DRAW_DELAY_MS: "5000"
+  MONGO_URI_CLIENT: "mongodb://mongo:27017/place"
+  DRAW_DELAY_MS: "5000"
   # GeekPie Casdoor 配置
-  NEXT_PUBLIC_CASDOOR_SERVER_URL: "https://auth.geekpie.club"
-  NEXT_PUBLIC_CASDOOR_CLIENT_ID: "bba8bd20531871c597b5"
-  NEXT_PUBLIC_CASDOOR_CLIENT_SECRET: "46be845d100954e35671595979c7aaf6f728389e"
-  NEXT_PUBLIC_CASDOOR_APP_NAME: "paintboard"
-  NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME: "geekpie"
+  CASDOOR_SERVER_URL: "https://auth.geekpie.club"
+  CASDOOR_CLIENT_ID: "bba8bd20531871c597b5"
+  CASDOOR_CLIENT_SECRET: "46be845d100954e35671595979c7aaf6f728389e"
+  CASDOOR_APP_NAME: "paintboard"
+  CASDOOR_ORGANIZATION_NAME: "geekpie"
 ---
 apiVersion: v1
 kind: Secret

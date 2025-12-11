@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
-const MONGO_URI = process.env.MONGO_URI || process.env.NEXT_PUBLIC_MONGO_URI || 'mongodb://localhost/place';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_CLIENT || process.env.MONGO_URI || 'mongodb://localhost:27017/place';
 
 if (!MONGO_URI) {
-  throw new Error('Please define the MONGO_URI or NEXT_PUBLIC_MONGO_URI environment variable');
+  throw new Error('Please define the MONGO_URI or MONGO_URI environment variable');
 }
 
 interface CachedConnection {

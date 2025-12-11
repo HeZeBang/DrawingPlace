@@ -5,11 +5,11 @@ import crypto from 'crypto';
 
 // Server-side Casdoor config
 const serverConfig = {
-    serverUrl: process.env.NEXT_PUBLIC_CASDOOR_SERVER_URL || "https://door.casdoor.com",
-    clientId: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || "client_id",
-    clientSecret: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_SECRET || "client_secret",
-    appName: process.env.NEXT_PUBLIC_CASDOOR_APP_NAME || "app_name",
-    organizationName: process.env.NEXT_PUBLIC_CASDOOR_ORGANIZATION_NAME || "casbin"
+    serverUrl: process.env.CASDOOR_SERVER_URL || "https://door.casdoor.com",
+    clientId: process.env.CASDOOR_CLIENT_ID || "client_id",
+    clientSecret: process.env.CASDOOR_CLIENT_SECRET || "client_secret",
+    appName: process.env.CASDOOR_APP_NAME || "app_name",
+    organizationName: process.env.CASDOOR_ORGANIZATION_NAME || "casbin"
 };
 
 export async function POST(request: Request) {
