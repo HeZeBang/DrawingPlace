@@ -2,6 +2,7 @@
   "name": "drawing-place-next",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.25.0",
   "scripts": {
     "dev": "ts-node --project tsconfig.server.json server.ts",
     "dev:port": "PORT=${PORT:-8080} ts-node --project tsconfig.server.json server.ts",

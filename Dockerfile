@@ -1,5 +1,5 @@
-# 使用官方 Node.js 18 LTS 镜像作为基础镜像
-FROM node:18-alpine AS base
+# 使用官方 Node.js 20 LTS 镜像作为基础镜像
+FROM node:20-alpine AS base
 
 # 安装依赖（仅在需要时）
 FROM base AS deps
@@ -24,7 +24,7 @@ RUN corepack enable pnpm && pnpm build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # 创建非 root 用户以运行应用程序
 RUN addgroup --system --gid 1001 nodejs
@@ -49,8 +49,8 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # 运行自定义服务器
 CMD ["node_modules/.bin/ts-node", "--project", "tsconfig.server.json", "server.ts"]
