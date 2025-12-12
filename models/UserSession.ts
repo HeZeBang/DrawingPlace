@@ -3,7 +3,6 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IUserSession extends Document {
   userId: string;
   token: string;
-  updatedAt: Date;
   createdAt: Date;
 }
 
@@ -11,7 +10,6 @@ const schema = new Schema<IUserSession>(
   {
     userId: { type: String, required: true, index: { unique: true } },
     token: { type: String, required: true },
-    updatedAt: { type: Date, default: Date.now },
     createdAt: { type: Date, default: 0 },
   },
   {

@@ -10,6 +10,7 @@ const serverConfig = {
   clientSecret: process.env.CASDOOR_CLIENT_SECRET || "",
   appName: process.env.CASDOOR_APP_NAME || "",
   organizationName: process.env.CASDOOR_ORGANIZATION_NAME || "",
+  drawMaxPoints: parseInt(process.env.DRAW_MAX_POINTS || "5", 10),
 };
 
 export async function POST(request: Request) {
@@ -109,7 +110,6 @@ export async function POST(request: Request) {
     await UserSession.create({
       userId: userId,
       token: drawToken,
-      updatedAt: new Date(),
       createdAt: new Date(),
     });
 

@@ -11,14 +11,18 @@ import { z } from "zod";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-console.log("Environment Variables:", {
+const serverConfig = {
+  NODE_ENV: process.env.NODE_ENV,
   MONGO_URI: process.env.MONGO_URI,
   DRAW_DELAY_MS: process.env.DRAW_DELAY_MS,
+  DRAW_MAX_POINTS: process.env.DRAW_MAX_POINTS,
   CANVAS_WIDTH: process.env.CANVAS_WIDTH,
   CANVAS_HEIGHT: process.env.CANVAS_HEIGHT,
-});
+}
 
-const dev = process.env.NODE_ENV !== "production";
+console.log("Environment Variables:", serverConfig);
+
+const dev = serverConfig.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
@@ -26,16 +30,15 @@ const DrawDataSchema = z.object({
   x: z
     .number()
     .min(0)
-    .max(parseInt(process.env.CANVAS_WIDTH || "-1", 10) - 1),
+    .max(parseInt(serverConfig.CANVAS_WIDTH || "-1", 10) - 1),
   y: z
     .number()
     .min(0)
-    .max(parseInt(process.env.CANVAS_HEIGHT || "-1", 10) - 1),
+    .max(parseInt(serverConfig.CANVAS_HEIGHT || "-1", 10) - 1),
   w: z.number().min(1).max(1),
   h: z.number().min(1).max(1),
   c: z.string().min(7).max(7), // color code like #ffffff
 });
-type DrawData = z.infer<typeof DrawDataSchema>;
 
 const DrawRequestSchema = z.object({
   token: z.string().min(1),
@@ -112,7 +115,8 @@ app.prepare().then(() => {
   const io = new Server(server);
 
   // Rate limiting map
-  const rateLimits = new Map<string, number>();
+  const lastPointUpdates = new Map<string, number>();
+  const lastPoints = new Map<string, number>();
 
   // Socket authentication middleware
   io.use(async (socket, next) => {
@@ -164,26 +168,37 @@ app.prepare().then(() => {
         return;
       }
 
-      // console.log(
-      //   `Draw action from user ${user.id}, token ${user.token}:`,
-      //   data,
-      // );
-
-      // Rate limit check
-      const lastTime = rateLimits.get(user.token) || 0;
+      // Rate limit check: updated for pack system
+      const maxPoints = serverConfig.DRAW_MAX_POINTS ? parseInt(serverConfig.DRAW_MAX_POINTS) : 24;
       const now = Date.now();
-      // console.log(
-      //   `Last draw time for user ${user.id}: ${lastTime} (now: ${now})`,
-      // );
-      const delay = process.env.DRAW_DELAY_MS
-        ? parseInt(process.env.DRAW_DELAY_MS)
+      const lastPointUpdate = lastPointUpdates.has(user.id) ? lastPointUpdates.get(user.id) : now; // if not found, then it is new user
+      const lastPoint = lastPoints.has(user.id) ? lastPoints.get(user.id) : maxPoints; // default to max points
+      let timePassed = now - lastPointUpdate;
+      const delay = serverConfig.DRAW_DELAY_MS
+        ? parseInt(serverConfig.DRAW_DELAY_MS)
         : 5000;
-      if (now - lastTime < delay) {
-        if (cb) cb(Math.ceil((delay - (now - lastTime)) / 1000)); // return remaining seconds
+      
+      const recoverPoints = Math.floor(timePassed / delay);
+
+      let rawCurrentPoints = lastPoint + recoverPoints;
+      let currentPoints = Math.min(
+        maxPoints, rawCurrentPoints
+      );
+
+      if (currentPoints <= 0) {
+        const nextAvailableIn = delay - (timePassed % delay);
+        console.log(`User ${user.id} has no points left. Next point in ${nextAvailableIn}ms`);
+        if (cb) cb(nextAvailableIn);
         return;
+      } else {
+        currentPoints -= 1;
+        let newUpdatedAt = now;
+        if (rawCurrentPoints < maxPoints) {
+          newUpdatedAt = now - (timePassed % delay);
+        }
+        lastPoints.set(user.id, currentPoints);
+        lastPointUpdates.set(user.id, newUpdatedAt);
       }
-      rateLimits.set(user.token, now);
-      // console.log(`Updated last draw time for user ${user.id} to ${now}`);
 
       // Broadcast to others(including self)
       socket.broadcast.emit("draw", data);
