@@ -25,7 +25,6 @@ const Board = () => {
   const [location, setLocation] = useState({ x: 0, y: 0 });
   const [ratio, setRatio] = useState(1);
   const [editable, setEditable] = useState(true);
-  const [countdown, setCountdown] = useState(0);
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -80,10 +79,15 @@ const Board = () => {
       setPoints((prev) => [...prev, data]);
     });
 
+    socket.on("sync", (data) => {
+      syncFromServer(data.pointsLeft, data.lastUpdate);
+      console.log("Synced from server", data);
+    });
+
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [config.DRAW_DELAY_MS]);
+  }, [config.DRAW_DELAY_MS, syncFromServer]);
 
   const handleLogin = () => {
     const sdk = getCasdoorSdk();
@@ -155,14 +159,7 @@ const Board = () => {
         <div className="flex items-center gap-2 min-w-[100px]">
           <Clock className="w-4 h-4 text-muted-foreground" />
           <span>{pointsLeft}/{config.DRAW_MAX_POINTS}{" "}</span>
-          <span
-            className={
-              countdown > 0
-                ? "text-destructive font-bold"
-                : "text-muted-foreground"
-            }
-          >
-            {/* {countdown > 0 ? `${countdown}s` : "Ready"} */}
+          <span>
             {Math.ceil(nextRecoverIn / 1000)}s
           </span>
         </div>

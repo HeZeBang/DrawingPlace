@@ -127,6 +127,13 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("Client connected");
 
+    // set token to roomId
+    const roomId = socket.data.token;
+    if (roomId) {
+      socket.join(roomId);
+      console.log(`Socket joined room: ${roomId}`);
+    }
+
     socket.on("draw", async (params, cb: (result: AppError) => void) => {
       const parseResult = DrawRequestSchema.safeParse(params);
       if (!parseResult.success) {
@@ -181,6 +188,7 @@ app.prepare().then(() => {
         maxPoints, rawCurrentPoints
       );
 
+      let newUpdatedAt = now;
       if (currentPoints <= 0) {
         const nextAvailableIn = delay - (timePassed % delay);
         console.log(`User ${user.id} has no points left. Next point in ${nextAvailableIn}ms`);
@@ -188,7 +196,6 @@ app.prepare().then(() => {
         return;
       } else {
         currentPoints -= 1;
-        let newUpdatedAt = now;
         if (rawCurrentPoints < maxPoints) {
           newUpdatedAt = now - (timePassed % delay);
         }
@@ -199,7 +206,13 @@ app.prepare().then(() => {
       // Broadcast to others(including self)
       socket.broadcast.emit("draw", data);
 
-      if (cb) cb({ code: AppErrorCode.Success, message: "Draw successful", pointsLeft: currentPoints, lastUpdate: now });
+      // Sync status
+      io.to(roomId).emit("sync", {
+        pointsLeft: currentPoints,
+        lastUpdate: newUpdatedAt,
+      });
+
+      if (cb) cb({ code: AppErrorCode.Success, message: "Draw successful", pointsLeft: currentPoints, lastUpdate: newUpdatedAt });
 
       // Save to DB
       const username = user.id;
