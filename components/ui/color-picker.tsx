@@ -215,21 +215,38 @@ function ColorPicker({
                   onBlur={(e) => {
                     const value = e.target.value;
                     if (isValidHexColor(value)) {
-                      try {(e.target as HTMLInputElement).classList.remove("ring-red-500", "ring-2", "focus-visible:ring-red-500"); }
-                      catch {};
+                      try {
+                        (e.target as HTMLInputElement).classList.remove(
+                          "ring-red-500",
+                          "ring-2",
+                          "focus-visible:ring-red-500",
+                        );
+                      } catch {}
                       handleValueChange(hexToHsva(value));
                     } else {
-                      (e.target as HTMLInputElement).classList.add("ring-red-500", "ring-2", "focus-visible:ring-red-500");
+                      (e.target as HTMLInputElement).classList.add(
+                        "ring-red-500",
+                        "ring-2",
+                        "focus-visible:ring-red-500",
+                      );
                     }
                   }}
                   onChange={(e) => {
                     const value = e.target.value;
                     if (!isValidHexColor(value)) {
-                      (e.target as HTMLInputElement).classList.add("ring-red-500", "ring-2", "focus-visible:ring-red-500");
+                      (e.target as HTMLInputElement).classList.add(
+                        "ring-red-500",
+                        "ring-2",
+                        "focus-visible:ring-red-500",
+                      );
                     } else {
-                      try {(e.target as HTMLInputElement).classList.remove("ring-red-500", "ring-2", "focus-visible:ring-red-500"); }
-                      catch {};
-
+                      try {
+                        (e.target as HTMLInputElement).classList.remove(
+                          "ring-red-500",
+                          "ring-2",
+                          "focus-visible:ring-red-500",
+                        );
+                      } catch {}
                     }
                   }}
                 />
@@ -260,7 +277,9 @@ function ColorPicker({
                     }
                     onClick={() => handleValueChange(hexToHsva(color))}
                     onKeyUp={(e) =>
-                      e.key === "Enter" ? handleValueChange(hexToHsva(color)) : null
+                      e.key === "Enter"
+                        ? handleValueChange(hexToHsva(color))
+                        : null
                     }
                     aria-label={`Set color to ${color}`}
                     className="size-5 cursor-pointer rounded bg-[var(--swatch-color)] ring-2 ring-[var(--swatch-color)00] ring-offset-1 ring-offset-background transition-all duration-100 hover:ring-[var(--swatch-color)]"
@@ -403,7 +422,9 @@ function ObjectColorInput({
   label,
   onValueChange,
 }: ObjectColorInputProps) {
-  const [localValue, setLocalValue] = React.useState<HslaColor | RgbaColor>(value);
+  const [localValue, setLocalValue] = React.useState<HslaColor | RgbaColor>(
+    value,
+  );
 
   React.useEffect(() => {
     setLocalValue(value);

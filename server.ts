@@ -8,7 +8,7 @@ import Action from "./models/Action";
 import UserSession from "./models/UserSession";
 import { AppErrorCode } from "./lib/err";
 import { z } from "zod";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
 console.log("Environment Variables:", {
@@ -23,8 +23,14 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const DrawDataSchema = z.object({
-  x: z.number().min(0).max(parseInt(process.env.CANVAS_WIDTH || "-1", 10) - 1),
-  y: z.number().min(0).max(parseInt(process.env.CANVAS_HEIGHT || "-1", 10) - 1),
+  x: z
+    .number()
+    .min(0)
+    .max(parseInt(process.env.CANVAS_WIDTH || "-1", 10) - 1),
+  y: z
+    .number()
+    .min(0)
+    .max(parseInt(process.env.CANVAS_HEIGHT || "-1", 10) - 1),
   w: z.number().min(1).max(1),
   h: z.number().min(1).max(1),
   c: z.string().min(7).max(7), // color code like #ffffff

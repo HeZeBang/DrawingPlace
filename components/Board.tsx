@@ -225,13 +225,14 @@ const Board = () => {
                 onDraw={handleDraw}
                 editable={editable}
               />
-              <div className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse`}
+              <div
+                className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse`}
                 style={{
                   left: location.x + 1,
                   top: location.y + 1,
                   backgroundColor: selectedColor || "transparent",
                 }}
-               />
+              />
             </div>
           </TransformComponent>
         </TransformWrapper>
@@ -263,11 +264,22 @@ const Board = () => {
           />
           <div className="text-xs text-center flex flex-col">
             <span className="">{title}</span>
-            <span className="text-muted-foreground">Made with ❤️ by ZAMBAR at GeekPie_</span>
+            <span className="text-muted-foreground">
+              Made with ❤️ by ZAMBAR at GeekPie_
+            </span>
             <div className="text-muted-foreground flex gap-1 justify-center">
-              <a href="#" onClick={() => {setShowGuideModal(true)}}>使用说明</a>
+              <a
+                href="#"
+                onClick={() => {
+                  setShowGuideModal(true);
+                }}
+              >
+                使用说明
+              </a>
               <a href="https://github.com/HeZeBang/DrawingPlace">开放源代码</a>
-              <a href="https://github.com/HeZeBang/DrawingPlace/issues">问题上报</a>
+              <a href="https://github.com/HeZeBang/DrawingPlace/issues">
+                问题上报
+              </a>
               <a href="https://join.geekpie.club/qq">加入 GeekPie_</a>
             </div>
           </div>

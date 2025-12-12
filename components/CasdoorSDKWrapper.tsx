@@ -4,10 +4,8 @@ import { RuntimeConfigProvider } from "./RuntimeConfigProvider";
 
 export function CasdoorSDKWrapper({ children }: { children: React.ReactNode }) {
   const config = getRuntimeConfig();
-  
+
   return (
-    <RuntimeConfigProvider config={config}>
-      {children}
-    </RuntimeConfigProvider>
+    <RuntimeConfigProvider config={config}>{children}</RuntimeConfigProvider>
   );
 }

@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   return {
     title: process.env.META_TITLE || "Drawing Place",
-    description: process.env.META_DESCRIPTION || "A collaborative drawing board.",
+    description:
+      process.env.META_DESCRIPTION || "A collaborative drawing board.",
   };
 }
 
@@ -19,9 +20,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <CasdoorSDKWrapper>
-          {children}
-        </CasdoorSDKWrapper>
+        <CasdoorSDKWrapper>{children}</CasdoorSDKWrapper>
         <Toaster richColors />
       </body>
     </html>

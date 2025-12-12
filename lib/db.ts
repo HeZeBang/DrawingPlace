@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
 const MONGO_URI =

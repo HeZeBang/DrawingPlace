@@ -36,7 +36,9 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   }, [token]);
 
   return (
-    <div className={`flex flex-wrap gap-2 justify-center items-center max-w-[${config.CANVAS_WIDTH}px] mx-auto p-2 bg-card rounded-xl border shadow-sm`}>
+    <div
+      className={`flex flex-wrap gap-2 justify-center items-center max-w-[${config.CANVAS_WIDTH}px] mx-auto p-2 bg-card rounded-xl border shadow-sm`}
+    >
       {dataSource.map((color) => (
         <Button
           key={color}
@@ -52,14 +54,14 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
         />
       ))}
 
-        <Button
-          key={`cur_${selectedColor}`}
-          className={cn(
-            "w-8 h-8 rounded-full border-none sm:hidden transition-all border cursor-default"
-          )}
-          style={{ backgroundColor: selectedColor }}
-          aria-label={`Select color ${selectedColor}`}
-        />
+      <Button
+        key={`cur_${selectedColor}`}
+        className={cn(
+          "w-8 h-8 rounded-full border-none sm:hidden transition-all border cursor-default",
+        )}
+        style={{ backgroundColor: selectedColor }}
+        aria-label={`Select color ${selectedColor}`}
+      />
 
       <div className="w-px h-8 bg-border mx-2" />
 
@@ -74,21 +76,21 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
           className={cn(
             `w-8 h-8 rounded-full p-0 border-none`,
             selectedColor &&
-            !dataSource.includes(selectedColor.replace("#", "")) &&
-            "ring-2 ring-ring ring-offset-2",
+              !dataSource.includes(selectedColor.replace("#", "")) &&
+              "ring-2 ring-ring ring-offset-2",
           )}
           style={{
             backgroundColor:
               selectedColor &&
-                !dataSource.includes(selectedColor.replace("#", ""))
+              !dataSource.includes(selectedColor.replace("#", ""))
                 ? selectedColor
                 : undefined,
           }}
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-              <Paintbrush className="h-4 w-4" />
-            )}
+            <Paintbrush className="h-4 w-4" />
+          )}
         </Button>
       </ColorPicker>
 
@@ -134,7 +136,10 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
                   })
                     .then((res) => {
                       if (res.ok) return res.json();
-                      else throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+                      else
+                        throw new Error(
+                          `HTTP ${res.status} - ${res.statusText}`,
+                        );
                     })
                     .then((data) => {
                       if (data.token) {

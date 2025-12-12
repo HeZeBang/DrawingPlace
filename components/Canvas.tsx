@@ -33,7 +33,7 @@ const Canvas = ({ dataSource, color, onMove, onDraw, editable }) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+      canvas.addEventListener("contextmenu", (e) => e.preventDefault());
     }
   }, [canvasRef]);
 

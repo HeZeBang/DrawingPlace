@@ -41,9 +41,7 @@ export const getRuntimeConfig = () => {
     ),
 
     CANVAS_WIDTH: parseInt(
-      process.env.CANVAS_WIDTH ||
-        process.env.NEXT_PUBLIC_CANVAS_WIDTH ||
-        "620",
+      process.env.CANVAS_WIDTH || process.env.NEXT_PUBLIC_CANVAS_WIDTH || "620",
       10,
     ),
 
