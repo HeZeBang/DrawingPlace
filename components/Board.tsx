@@ -10,6 +10,7 @@ import { getCasdoorSdk } from "@/lib/casdoor";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
 import { AppErrorCode } from "@/lib/err";
+import GuideModal from "./GuideModal";
 
 let socket;
 
@@ -26,10 +27,14 @@ const Board = () => {
   const [countdown, setCountdown] = useState(0);
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [title, setTitle] = useState("Drawing Place");
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
+    if (!localStorage.getItem("opened_guide_modal")) {
+      setShowGuideModal(true);
+    }
   }, []);
 
   // Initialize socket and load data
@@ -227,6 +232,17 @@ const Board = () => {
           isOpen={showLoginModal}
           onClickBtn={handleLogin}
           onClose={() => setShowLoginModal(false)}
+        />
+        <GuideModal
+          isOpen={showGuideModal}
+          onClickBtn={() => {
+            localStorage.setItem("opened_guide_modal", "true");
+            setShowGuideModal(false);
+          }}
+          onClose={() => {
+            localStorage.setItem("opened_guide_modal", "true");
+            setShowGuideModal(false);
+          }}
         />
       </div>
 

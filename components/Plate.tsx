@@ -21,10 +21,12 @@ import { toast } from "sonner";
 const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   if (!dataSource) return null;
   const [token, setToken] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
     setToken(localStorage.getItem("draw_token") || "");
+    setIsLoggedIn(!!localStorage.getItem("casdoor_token"));
   }, []);
 
   useEffect(() => {
@@ -93,8 +95,8 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
         />
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" disabled={isFetching}>
-              刷新
+            <Button variant="outline" disabled={isFetching || !isLoggedIn}>
+              {isLoggedIn ? "刷新" : "请先登录"}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
