@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import io from "socket.io-client";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { ZoomIn, MapPin, Clock, LogIn, LogOut } from "lucide-react";
+import { ZoomIn, MapPin, Clock, LogIn, LogOut, PaintBucket } from "lucide-react";
 import Canvas from "./Canvas";
-import Plate from "./Plate";
+import Dock from "./Dock";
 import LoginModal from "./LoginModal";
 import { getCasdoorSdk } from "@/lib/casdoor";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
@@ -184,8 +184,9 @@ const Board = () => {
           </span>
         </div>
         <div className="flex items-center gap-2 min-w-[100px]">
-          <Clock className="w-4 h-4 text-muted-foreground" />
+          <PaintBucket className="w-4 h-4 text-muted-foreground" />
           <span>{pointsLeft}/{config.DRAW_MAX_POINTS}{" "}</span>
+          <Clock className="w-4 h-4 text-muted-foreground" />
           <span>
             {Math.ceil(nextRecoverIn / 1000)}s
           </span>
@@ -278,7 +279,7 @@ const Board = () => {
       {/* Bottom Control Area */}
       <div className="bg-card border-t p-4 z-10 shrink-0">
         <div className="flex flex-col items-center gap-4">
-          <Plate
+          <Dock
             dataSource={colors}
             onSelectColor={setSelectedColor}
             selectedColor={selectedColor}

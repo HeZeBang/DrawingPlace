@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Button } from "@/components/ui/button";
-import { Paintbrush } from "lucide-react";
+import { Paintbrush, Palette } from "lucide-react";
 import { Input } from "./ui/input";
 import {
   AlertDialog,
@@ -19,7 +19,7 @@ import {
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
 
-const Plate = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid }) => {
+const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid }) => {
   const { config } = useRuntimeConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
@@ -85,7 +85,7 @@ const Plate = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid 
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-            <Paintbrush className="h-4 w-4" />
+            <Palette className="h-4 w-4" />
           )}
         </Button>
       </ColorPicker>
@@ -170,4 +170,4 @@ const Plate = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid 
   );
 };
 
-export default Plate;
+export default Dock;
