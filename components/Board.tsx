@@ -11,6 +11,7 @@ import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
 import { AppErrorCode } from "@/lib/err";
 import GuideModal from "./GuideModal";
+import { useBackpack } from "@/lib/use-backpack";
 
 let socket;
 
@@ -29,6 +30,7 @@ const Board = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [title, setTitle] = useState("Drawing Place");
+  const { points: pointsLeft, nextRecoverIn, consumePoint } = useBackpack(config.DRAW_MAX_POINTS, config.DRAW_MAX_POINTS, config.DRAW_DELAY_MS);
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
@@ -103,7 +105,7 @@ const Board = () => {
         return;
       }
 
-      if (!editable) return;
+      if (!editable || pointsLeft <= 0) return;
 
       // Emit to server with token and handle response
       socket.emit(
@@ -116,12 +118,11 @@ const Board = () => {
           if (result === 0) {
             // Success: Add point and start delay
             setPoints((prev) => [...prev, params]);
-            setEditable(false);
-            setCountdown(delay);
+            consumePoint();
           } else if (result > 0) {
             // Handle rate limit countdown
             setCountdown(result);
-            setEditable(false);
+            toast.info(`请等待 ${result}s 后再绘制`);
           } else {
             // Failed: Show error message or handle failure
             // Could add a toast notification here
@@ -129,19 +130,8 @@ const Board = () => {
           }
         },
       );
-
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setEditable(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
     },
-    [editable, delay, user],
+    [editable, delay, user, pointsLeft, nextRecoverIn, consumePoint, config.DRAW_MAX_POINTS],
   );
 
   const handleMove = (loc) => {
@@ -164,6 +154,7 @@ const Board = () => {
         </div>
         <div className="flex items-center gap-2 min-w-[100px]">
           <Clock className="w-4 h-4 text-muted-foreground" />
+          <span>{pointsLeft}/{config.DRAW_MAX_POINTS}{" "}</span>
           <span
             className={
               countdown > 0
@@ -171,7 +162,8 @@ const Board = () => {
                 : "text-muted-foreground"
             }
           >
-            {countdown > 0 ? `${countdown}s` : "Ready"}
+            {/* {countdown > 0 ? `${countdown}s` : "Ready"} */}
+            {Math.ceil(nextRecoverIn / 1000)}s
           </span>
         </div>
         <div className="flex items-center gap-2 ml-4 border-l pl-4">
@@ -224,7 +216,7 @@ const Board = () => {
                 color={selectedColor}
                 onMove={handleMove}
                 onDraw={handleDraw}
-                editable={editable}
+                editable={pointsLeft > 0 && editable}
               />
               <div
                 className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse`}

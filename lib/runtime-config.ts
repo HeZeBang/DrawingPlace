@@ -40,6 +40,13 @@ export const getRuntimeConfig = () => {
       10,
     ),
 
+    DRAW_MAX_POINTS: parseInt(
+      process.env.DRAW_MAX_POINTS ||
+        process.env.NEXT_PUBLIC_DRAW_MAX_POINTS ||
+        "24",
+      10,
+    ),
+
     CANVAS_WIDTH: parseInt(
       process.env.CANVAS_WIDTH || process.env.NEXT_PUBLIC_CANVAS_WIDTH || "620",
       10,
@@ -63,6 +70,7 @@ export interface RuntimeConfig {
   CASDOOR_ORGANIZATION_NAME: string;
   MONGO_URI_CLIENT: string;
   DRAW_DELAY_MS: number;
+  DRAW_MAX_POINTS: number;
   CANVAS_WIDTH: number;
   CANVAS_HEIGHT: number;
 }
