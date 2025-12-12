@@ -9,7 +9,7 @@ import LoginModal from "./LoginModal";
 import { getCasdoorSdk } from "@/lib/casdoor";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
-import { AppErrorCode } from "@/lib/err";
+import { AppError, AppErrorCode } from "@/lib/err";
 import GuideModal from "./GuideModal";
 import { useBackpack } from "@/lib/use-backpack";
 
@@ -30,7 +30,7 @@ const Board = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [title, setTitle] = useState("Drawing Place");
-  const { points: pointsLeft, nextRecoverIn, consumePoint } = useBackpack(config.DRAW_MAX_POINTS, config.DRAW_MAX_POINTS, config.DRAW_DELAY_MS);
+  const { points: pointsLeft, nextRecoverIn, consumePoint, syncFromServer } = useBackpack(config.DRAW_MAX_POINTS, config.DRAW_MAX_POINTS, config.DRAW_DELAY_MS);
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
@@ -114,19 +114,19 @@ const Board = () => {
           token: token,
           data: params,
         },
-        (result: number) => {
-          if (result === 0) {
+        (result: AppError) => {
+          if (result.code === AppErrorCode.Success) {
             // Success: Add point and start delay
             setPoints((prev) => [...prev, params]);
             consumePoint();
-          } else if (result > 0) {
+          } else if (result.code === AppErrorCode.InsufficientPoints) {
             // Handle rate limit countdown
-            setCountdown(result);
-            toast.info(`请等待 ${result}s 后再绘制`);
+            syncFromServer(result.pointsLeft || 0, result.lastUpdate || Date.now());
+            toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
           } else {
             // Failed: Show error message or handle failure
             // Could add a toast notification here
-            toast.error(`绘制失败：${AppErrorCode[result] || "未知错误"}`);
+            toast.error(`绘制失败：${result.message || "未知错误"}`);
           }
         },
       );

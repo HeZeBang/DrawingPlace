@@ -6,7 +6,7 @@ import dbConnect from "./lib/db";
 import Point from "./models/Point";
 import Action from "./models/Action";
 import UserSession from "./models/UserSession";
-import { AppErrorCode } from "./lib/err";
+import { AppError, AppErrorCode } from "./lib/err";
 import { z } from "zod";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -96,16 +96,6 @@ async function createAction(params: any) {
   }
 }
 
-function validateDrawRequest(obj: any): DrawRequest | null {
-  const result = DrawRequestSchema.safeParse(obj);
-  if (result.success) {
-    return result.data;
-  } else {
-    console.error("Invalid draw request:", result.error);
-    return null;
-  }
-}
-
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
@@ -137,12 +127,18 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("Client connected");
 
-    socket.on("draw", async (params, cb) => {
-      const { token, data } = validateDrawRequest(params) || {};
+    socket.on("draw", async (params, cb: (result: AppError) => void) => {
+      const parseResult = DrawRequestSchema.safeParse(params);
+      if (!parseResult.success) {
+        console.error("Error while parsing: ", parseResult.error);
+        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: parseResult.error.message || "Error while parsing" });
+        return;
+      }
+      const { token, data } = parseResult.data;
 
       if (!token || !data) {
         console.error("Invalid draw parameters");
-        if (cb) cb(AppErrorCode.InvalidRequest);
+        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: "Invalid draw parameters" });
         return;
       }
 
@@ -154,17 +150,17 @@ app.prepare().then(() => {
           if (session) {
             user = { id: session.userId, token: token };
           } else {
-            if (cb) cb(AppErrorCode.InvalidToken);
+            if (cb) cb({ code: AppErrorCode.InvalidToken, message: "Invalid token" });
             return;
           }
         } catch (e) {
           console.error("Token verification error", e);
-          if (cb) cb(AppErrorCode.UnknownError);
+          if (cb) cb({ code: AppErrorCode.UnknownError, message: "Unknown error" });
           return;
         }
       } else {
         console.error("No token provided");
-        if (cb) cb(AppErrorCode.InvalidRequest);
+        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: "No token provided" });
         return;
       }
 
@@ -188,7 +184,7 @@ app.prepare().then(() => {
       if (currentPoints <= 0) {
         const nextAvailableIn = delay - (timePassed % delay);
         console.log(`User ${user.id} has no points left. Next point in ${nextAvailableIn}ms`);
-        if (cb) cb(nextAvailableIn);
+        if (cb) cb({ code: AppErrorCode.InsufficientPoints, message: "Insufficient points", pointsLeft: 0, lastUpdate: lastPointUpdate });
         return;
       } else {
         currentPoints -= 1;
@@ -203,7 +199,7 @@ app.prepare().then(() => {
       // Broadcast to others(including self)
       socket.broadcast.emit("draw", data);
 
-      if (cb) cb(AppErrorCode.Success);
+      if (cb) cb({ code: AppErrorCode.Success, message: "Draw successful", pointsLeft: currentPoints, lastUpdate: now });
 
       // Save to DB
       const username = user.id;
