@@ -225,6 +225,7 @@ const Board = () => {
         </TransformWrapper>
         <LoginModal
           isOpen={showLoginModal}
+          onClickBtn={handleLogin}
           onClose={() => setShowLoginModal(false)}
         />
       </div>
