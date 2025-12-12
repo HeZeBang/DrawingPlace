@@ -19,7 +19,7 @@ import {
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
 
-const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
+const Plate = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid }) => {
   const { config } = useRuntimeConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
@@ -30,10 +30,6 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
     setToken(localStorage.getItem("draw_token") || "");
     setIsLoggedIn(!!localStorage.getItem("casdoor_token"));
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("draw_token", token);
-  }, [token]);
 
   return (
     <div
@@ -103,7 +99,11 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
           onChange={(e) => {
             setToken(e.target.value);
           }}
-          className="transition-all"
+          onBlur={() => {
+            updateToken(token);
+            localStorage.setItem("draw_token", token);
+          }}
+          className={cn("transition-all", isValid ? "border-green-500" : "border-red-500")}
           disabled={isFetching}
         />
         <AlertDialog>
@@ -145,6 +145,8 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
                       if (data.token) {
                         console.log("Draw token received", data.token);
                         setToken(data.token);
+                        updateToken(data.token);
+                        localStorage.setItem("draw_token", data.token);
                       }
                     })
                     .then(() => {

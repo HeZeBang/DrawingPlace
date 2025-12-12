@@ -120,6 +120,8 @@ app.prepare().then(() => {
       } catch (e) {
         console.error("Auth error", e);
       }
+    } else {
+      console.error("No token provided in handshake");
     }
     next();
   });
@@ -132,6 +134,7 @@ app.prepare().then(() => {
     if (roomId) {
       socket.join(roomId);
       console.log(`Socket joined room: ${roomId}`);
+      socket.emit("authenticated", { success: true });
     }
 
     socket.on("draw", async (params, cb: (result: AppError) => void) => {

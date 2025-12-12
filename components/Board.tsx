@@ -30,16 +30,22 @@ const Board = () => {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [title, setTitle] = useState("Drawing Place");
   const { points: pointsLeft, nextRecoverIn, consumePoint, syncFromServer } = useBackpack(config.DRAW_MAX_POINTS, config.DRAW_MAX_POINTS, config.DRAW_DELAY_MS);
+  const [token, setToken] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
     if (!localStorage.getItem("opened_guide_modal")) {
       setShowGuideModal(true);
     }
+    setToken(localStorage.getItem("draw_token") || "");
   }, []);
 
   // Initialize socket and load data
   useEffect(() => {
+    if (token === null) return;
+
     setDelay(config.DRAW_DELAY_MS);
 
     // Check for user
@@ -64,7 +70,10 @@ const Board = () => {
       });
 
     // Connect socket
-    const token = localStorage.getItem("draw_token") || "";
+    if (!token || token.length === 0) {
+      console.error("No draw token found in localStorage");
+    }
+
     socket = io({
       auth: {
         token: token,
@@ -73,6 +82,24 @@ const Board = () => {
 
     socket.on("connect", () => {
       console.log("Connected to socket");
+      setIsConnected(true);
+    });
+
+    socket.on("authenticated", () => {
+      console.log("Authenticated");
+      setIsValid(true);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Connection error:", err);
+      setIsConnected(false);
+      setIsValid(false);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from socket");
+      setIsConnected(false);
+      setIsValid(false);
     });
 
     socket.on("draw", (data) => {
@@ -87,7 +114,7 @@ const Board = () => {
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [config.DRAW_DELAY_MS, syncFromServer]);
+  }, [config.DRAW_DELAY_MS, syncFromServer, token]);
 
   const handleLogin = () => {
     const sdk = getCasdoorSdk();
@@ -164,6 +191,10 @@ const Board = () => {
           </span>
         </div>
         <div className="flex items-center gap-2 ml-4 border-l pl-4">
+          <div
+            className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
+            title={isConnected ? "Connected" : "Disconnected"}
+          />
           {user ? (
             <div className="flex items-center gap-2">
               <span className="text-xs truncate max-w-[100px]">
@@ -251,6 +282,8 @@ const Board = () => {
             dataSource={colors}
             onSelectColor={setSelectedColor}
             selectedColor={selectedColor}
+            updateToken={setToken}
+            isValid={isValid}
           />
           <div className="text-xs text-center flex flex-col">
             <span className="">{title}</span>
