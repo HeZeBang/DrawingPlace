@@ -2,7 +2,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import io from "socket.io-client";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { ZoomIn, MapPin, Clock, LogIn, LogOut, PaintBucket } from "lucide-react";
+import {
+  ZoomIn,
+  MapPin,
+  Clock,
+  LogIn,
+  LogOut,
+  PaintBucket,
+} from "lucide-react";
 import Canvas from "./Canvas";
 import Dock from "./Dock";
 import LoginModal from "./LoginModal";
@@ -29,7 +36,16 @@ const Board = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [title, setTitle] = useState("Drawing Place");
-  const { points: pointsLeft, nextRecoverIn, consumePoint, syncFromServer } = useBackpack(config.DRAW_MAX_POINTS, config.DRAW_MAX_POINTS, config.DRAW_DELAY_MS);
+  const {
+    points: pointsLeft,
+    nextRecoverIn,
+    consumePoint,
+    syncFromServer,
+  } = useBackpack(
+    config.DRAW_MAX_POINTS,
+    config.DRAW_MAX_POINTS,
+    config.DRAW_DELAY_MS,
+  );
   const [token, setToken] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isValid, setIsValid] = useState(false);
@@ -152,7 +168,10 @@ const Board = () => {
             consumePoint();
           } else if (result.code === AppErrorCode.InsufficientPoints) {
             // Handle rate limit countdown
-            syncFromServer(result.pointsLeft || 0, result.lastUpdate || Date.now());
+            syncFromServer(
+              result.pointsLeft || 0,
+              result.lastUpdate || Date.now(),
+            );
             toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
           } else {
             // Failed: Show error message or handle failure
@@ -162,7 +181,15 @@ const Board = () => {
         },
       );
     },
-    [editable, delay, user, pointsLeft, nextRecoverIn, consumePoint, config.DRAW_MAX_POINTS],
+    [
+      editable,
+      delay,
+      user,
+      pointsLeft,
+      nextRecoverIn,
+      consumePoint,
+      config.DRAW_MAX_POINTS,
+    ],
   );
 
   const handleMove = (loc) => {
@@ -185,11 +212,11 @@ const Board = () => {
         </div>
         <div className="flex items-center gap-2 min-w-[100px]">
           <PaintBucket className="w-4 h-4 text-muted-foreground" />
-          <span>{pointsLeft}/{config.DRAW_MAX_POINTS}{" "}</span>
-          <Clock className="w-4 h-4 text-muted-foreground" />
           <span>
-            {Math.ceil(nextRecoverIn / 1000)}s
+            {pointsLeft}/{config.DRAW_MAX_POINTS}{" "}
           </span>
+          <Clock className="w-4 h-4 text-muted-foreground" />
+          <span>{Math.ceil(nextRecoverIn / 1000)}s</span>
         </div>
         <div className="flex items-center gap-2 ml-4 border-l pl-4">
           <div

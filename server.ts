@@ -18,7 +18,7 @@ const serverConfig = {
   DRAW_MAX_POINTS: process.env.DRAW_MAX_POINTS,
   CANVAS_WIDTH: process.env.CANVAS_WIDTH,
   CANVAS_HEIGHT: process.env.CANVAS_HEIGHT,
-}
+};
 
 console.log("Environment Variables:", serverConfig);
 
@@ -141,14 +141,22 @@ app.prepare().then(() => {
       const parseResult = DrawRequestSchema.safeParse(params);
       if (!parseResult.success) {
         console.error("Error while parsing: ", parseResult.error);
-        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: parseResult.error.message || "Error while parsing" });
+        if (cb)
+          cb({
+            code: AppErrorCode.InvalidRequest,
+            message: parseResult.error.message || "Error while parsing",
+          });
         return;
       }
       const { token, data } = parseResult.data;
 
       if (!token || !data) {
         console.error("Invalid draw parameters");
-        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: "Invalid draw parameters" });
+        if (cb)
+          cb({
+            code: AppErrorCode.InvalidRequest,
+            message: "Invalid draw parameters",
+          });
         return;
       }
 
@@ -160,42 +168,60 @@ app.prepare().then(() => {
           if (session) {
             user = { id: session.userId, token: token };
           } else {
-            if (cb) cb({ code: AppErrorCode.InvalidToken, message: "Invalid token" });
+            if (cb)
+              cb({ code: AppErrorCode.InvalidToken, message: "Invalid token" });
             return;
           }
         } catch (e) {
           console.error("Token verification error", e);
-          if (cb) cb({ code: AppErrorCode.UnknownError, message: "Unknown error" });
+          if (cb)
+            cb({ code: AppErrorCode.UnknownError, message: "Unknown error" });
           return;
         }
       } else {
         console.error("No token provided");
-        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: "No token provided" });
+        if (cb)
+          cb({
+            code: AppErrorCode.InvalidRequest,
+            message: "No token provided",
+          });
         return;
       }
 
       // Rate limit check: updated for pack system
-      const maxPoints = serverConfig.DRAW_MAX_POINTS ? parseInt(serverConfig.DRAW_MAX_POINTS) : 24;
+      const maxPoints = serverConfig.DRAW_MAX_POINTS
+        ? parseInt(serverConfig.DRAW_MAX_POINTS)
+        : 24;
       const now = Date.now();
-      const lastPointUpdate = lastPointUpdates.has(user.id) ? lastPointUpdates.get(user.id) : now; // if not found, then it is new user
-      const lastPoint = lastPoints.has(user.id) ? lastPoints.get(user.id) : maxPoints; // default to max points
+      const lastPointUpdate = lastPointUpdates.has(user.id)
+        ? lastPointUpdates.get(user.id)
+        : now; // if not found, then it is new user
+      const lastPoint = lastPoints.has(user.id)
+        ? lastPoints.get(user.id)
+        : maxPoints; // default to max points
       let timePassed = now - lastPointUpdate;
       const delay = serverConfig.DRAW_DELAY_MS
         ? parseInt(serverConfig.DRAW_DELAY_MS)
         : 5000;
-      
+
       const recoverPoints = Math.floor(timePassed / delay);
 
       let rawCurrentPoints = lastPoint + recoverPoints;
-      let currentPoints = Math.min(
-        maxPoints, rawCurrentPoints
-      );
+      let currentPoints = Math.min(maxPoints, rawCurrentPoints);
 
       let newUpdatedAt = now;
       if (currentPoints <= 0) {
         const nextAvailableIn = delay - (timePassed % delay);
-        console.log(`User ${user.id} has no points left. Next point in ${nextAvailableIn}ms`);
-        if (cb) cb({ code: AppErrorCode.InsufficientPoints, message: "Insufficient points", pointsLeft: 0, lastUpdate: lastPointUpdate });
+        console.log(
+          `User ${user.id} has no points left. Next point in ${nextAvailableIn}ms`,
+        );
+        if (cb)
+          cb({
+            code: AppErrorCode.InsufficientPoints,
+            message: "Insufficient points",
+            pointsLeft: 0,
+            lastUpdate: lastPointUpdate,
+          });
         return;
       } else {
         currentPoints -= 1;
@@ -215,7 +241,13 @@ app.prepare().then(() => {
         lastUpdate: newUpdatedAt,
       });
 
-      if (cb) cb({ code: AppErrorCode.Success, message: "Draw successful", pointsLeft: currentPoints, lastUpdate: newUpdatedAt });
+      if (cb)
+        cb({
+          code: AppErrorCode.Success,
+          message: "Draw successful",
+          pointsLeft: currentPoints,
+          lastUpdate: newUpdatedAt,
+        });
 
       // Save to DB
       const username = user.id;

@@ -19,7 +19,13 @@ import {
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
 
-const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid }) => {
+const Dock = ({
+  dataSource,
+  onSelectColor,
+  selectedColor,
+  updateToken,
+  isValid,
+}) => {
   const { config } = useRuntimeConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
@@ -103,7 +109,10 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken, isValid }
             updateToken(token);
             localStorage.setItem("draw_token", token);
           }}
-          className={cn("transition-all", isValid ? "border-green-500" : "border-red-500")}
+          className={cn(
+            "transition-all",
+            isValid ? "border-green-500" : "border-red-500",
+          )}
           disabled={isFetching}
         />
         <AlertDialog>
