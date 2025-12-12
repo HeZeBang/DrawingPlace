@@ -204,10 +204,11 @@ const Board = () => {
       <div className="flex-1 overflow-hidden relative bg-muted/20 flex items-center justify-center">
         <TransformWrapper
           initialScale={1}
-          minScale={1}
+          minScale={0.3}
           maxScale={20}
           centerOnInit={true}
-          wheel={{ step: 0.1, activationKeys: ["Control"] }}
+          smooth={false}
+          wheel={{ step: ratio * 0.1, touchPadDisabled: false }}
           panning={{
             allowLeftClickPan: false,
             allowMiddleClickPan: true,

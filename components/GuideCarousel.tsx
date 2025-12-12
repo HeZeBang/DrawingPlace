@@ -39,7 +39,7 @@ const content = [
     <p className="mt-2 text-sm text-muted-foreground">
       <b>单击鼠标左键</b> 或 <b>触摸屏幕</b> 以绘制像素点
       <br />
-      <b>Ctrl + 鼠标滚轮</b> 或 <b>双指捏合</b> 以缩放画布
+      <b>鼠标滚轮</b> 或 <b>双指捏合</b> 以缩放画布
       <br />
       <b>鼠标中键/右键拖动</b> 或 <b>触摸拖动</b> 以平移画布
     </p>
