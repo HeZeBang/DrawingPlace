@@ -16,9 +16,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
 
 const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
+  const { config } = useRuntimeConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,7 +36,7 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   }, [token]);
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center items-center max-w-[620px] mx-auto p-2 bg-card rounded-xl border shadow-sm">
+    <div className={`flex flex-wrap gap-2 justify-center items-center max-w-[${config.CANVAS_WIDTH}px] mx-auto p-2 bg-card rounded-xl border shadow-sm`}>
       {dataSource.map((color) => (
         <button
           key={color}

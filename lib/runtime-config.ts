@@ -31,12 +31,26 @@ export const getRuntimeConfig = () => {
       process.env.MONGO_URI_CLIENT ||
       process.env.NEXT_PUBLIC_MONGO_URI ||
       process.env.MONGO_URI ||
-      "mongodb://localhost:27017/place",
+      "mongodb://mongo/place",
 
     DRAW_DELAY_MS: parseInt(
       process.env.DRAW_DELAY_MS ||
         process.env.NEXT_PUBLIC_DRAW_DELAY_MS ||
         "5000",
+      10,
+    ),
+
+    CANVAS_WIDTH: parseInt(
+      process.env.CANVAS_WIDTH ||
+        process.env.NEXT_PUBLIC_CANVAS_WIDTH ||
+        "620",
+      10,
+    ),
+
+    CANVAS_HEIGHT: parseInt(
+      process.env.CANVAS_HEIGHT ||
+        process.env.NEXT_PUBLIC_CANVAS_HEIGHT ||
+        "300",
       10,
     ),
   };
@@ -51,4 +65,6 @@ export interface RuntimeConfig {
   CASDOOR_ORGANIZATION_NAME: string;
   MONGO_URI_CLIENT: string;
   DRAW_DELAY_MS: number;
+  CANVAS_WIDTH: number;
+  CANVAS_HEIGHT: number;
 }

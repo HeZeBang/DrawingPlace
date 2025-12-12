@@ -1,10 +1,12 @@
 "use client";
-import React, { useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
+import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 
 const Canvas = ({ dataSource, color, onMove, onDraw, editable }) => {
   const canvasRef = useRef(null);
 
-  const size = { width: 620, height: 300 };
+  const { config } = useRuntimeConfigContext();
+  const size = { width: config.CANVAS_WIDTH, height: config.CANVAS_HEIGHT };
 
   // Helper to draw a point
   const drawPoint = (ctx, p) => {
@@ -37,7 +39,6 @@ const Canvas = ({ dataSource, color, onMove, onDraw, editable }) => {
 
     // Calculate position relative to the canvas element
     // Since we rely on CSS transform for zoom, rect will be the zoomed size.
-    // canvas.width is the unzoomed logical size (620).
 
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;

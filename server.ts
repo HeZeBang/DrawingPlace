@@ -7,10 +7,35 @@ import Point from "./models/Point";
 import Action from "./models/Action";
 import UserSession from "./models/UserSession";
 import { AppErrorCode } from "./lib/err";
+import { z } from "zod";
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+console.log("Environment Variables:", {
+  MONGO_URI: process.env.MONGO_URI,
+  DRAW_DELAY_MS: process.env.DRAW_DELAY_MS,
+  CANVAS_WIDTH: process.env.CANVAS_WIDTH,
+  CANVAS_HEIGHT: process.env.CANVAS_HEIGHT,
+});
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
+
+const DrawDataSchema = z.object({
+  x: z.number().min(0).max(parseInt(process.env.CANVAS_WIDTH || "-1", 10) - 1),
+  y: z.number().min(0).max(parseInt(process.env.CANVAS_HEIGHT || "-1", 10) - 1),
+  w: z.number().min(1).max(1),
+  h: z.number().min(1).max(1),
+  c: z.string().min(7).max(7), // color code like #ffffff
+});
+type DrawData = z.infer<typeof DrawDataSchema>;
+
+const DrawRequestSchema = z.object({
+  token: z.string().min(1),
+  data: DrawDataSchema,
+});
+type DrawRequest = z.infer<typeof DrawRequestSchema>;
 
 // 初始化数据库连接
 dbConnect()
@@ -62,6 +87,16 @@ async function createAction(params: any) {
   }
 }
 
+function validateDrawRequest(obj: any): DrawRequest | null {
+  const result = DrawRequestSchema.safeParse(obj);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.error("Invalid draw request:", result.error);
+    return null;
+  }
+}
+
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
@@ -93,7 +128,13 @@ app.prepare().then(() => {
     console.log("Client connected");
 
     socket.on("draw", async (params, cb) => {
-      const { token, data } = params;
+      const { token, data } = validateDrawRequest(params) || {};
+
+      if (!token || !data) {
+        console.error("Invalid draw parameters");
+        if (cb) cb(AppErrorCode.InvalidRequest);
+        return;
+      }
 
       // Auth check - verify token from message
       let user: { id: string; token: string } | null = null;
@@ -117,17 +158,17 @@ app.prepare().then(() => {
         return;
       }
 
-      console.log(
-        `Draw action from user ${user.id}, token ${user.token}:`,
-        data,
-      );
+      // console.log(
+      //   `Draw action from user ${user.id}, token ${user.token}:`,
+      //   data,
+      // );
 
       // Rate limit check
       const lastTime = rateLimits.get(user.token) || 0;
       const now = Date.now();
-      console.log(
-        `Last draw time for user ${user.id}: ${lastTime} (now: ${now})`,
-      );
+      // console.log(
+      //   `Last draw time for user ${user.id}: ${lastTime} (now: ${now})`,
+      // );
       const delay = process.env.DRAW_DELAY_MS
         ? parseInt(process.env.DRAW_DELAY_MS)
         : 5000;
@@ -136,7 +177,7 @@ app.prepare().then(() => {
         return;
       }
       rateLimits.set(user.token, now);
-      console.log(`Updated last draw time for user ${user.id} to ${now}`);
+      // console.log(`Updated last draw time for user ${user.id} to ${now}`);
 
       // Broadcast to others(including self)
       socket.broadcast.emit("draw", data);
