@@ -10,15 +10,17 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MONGO_URI=mongodb://mongo:27017/place
-      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/place}
+      - META_TITLE=${META_TITLE:-Drawing Place}
+      - META_DESCRIPTION=${META_DESCRIPTION:-A collaborative drawing board.}
+      - DRAW_DELAY_MS=${DRAW_DELAY_MS:-5000}
+      - DRAW_MAX_POINTS=${DRAW_MAX_POINTS:-24}
+      - CANVAS_WIDTH=${CANVAS_WIDTH:-620}
+      - CANVAS_HEIGHT=${CANVAS_HEIGHT:-300}
       - CASDOOR_SERVER_URL=${CASDOOR_SERVER_URL}
       - CASDOOR_CLIENT_ID=${CASDOOR_CLIENT_ID}
       - CASDOOR_CLIENT_SECRET=${CASDOOR_CLIENT_SECRET}
       - CASDOOR_APP_NAME=${CASDOOR_APP_NAME}
       - CASDOOR_ORGANIZATION_NAME=${CASDOOR_ORGANIZATION_NAME}
-      - DRAW_DELAY_MS=${DRAW_DELAY_MS:-5000}
-      - META_TITLE=${META_TITLE:-Drawing Place}
-      - META_DESCRIPTION=${META_DESCRIPTION:-A collaborative drawing board.}
     depends_on:
       - mongo
     restart: unless-stopped

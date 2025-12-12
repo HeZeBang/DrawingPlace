@@ -22,7 +22,7 @@ A collaborative pixel drawing board inspired by r/place, built with Next.js and 
 
 Create a `.env` file that looks like `.env.example` in the root directory with the following variables:
 
-```bash
+```ini
 # Server Configuration
 NODE_ENV=production
 PORT=3000
@@ -38,7 +38,12 @@ CASDOOR_APP_NAME=your_app_name
 CASDOOR_ORGANIZATION_NAME=your_organization
 
 # Drawing Configuration
-DRAW_DELAY_MS=5000  # Cooldown period in milliseconds (default: 5000ms = 5s)
+META_TITLE=DrawPlace
+META_DESCRIPTION=Welcome to DrawPlace! Collaborate with art enthusiasts to create a masterpiece together!
+DRAW_DELAY_MS=5000
+DRAW_MAX_POINTS=24
+CANVAS_WIDTH=620
+CANVAS_HEIGHT=300
 ```
 
 ## Getting Started

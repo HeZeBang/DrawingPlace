@@ -328,11 +328,24 @@ const Board = () => {
               >
                 使用说明
               </a>
-              <a href="https://github.com/HeZeBang/DrawingPlace"className="underline hover:text-foreground">开放源代码</a>
-              <a href="https://github.com/HeZeBang/DrawingPlace/issues" className="underline hover:text-foreground">
+              <a
+                href="https://github.com/HeZeBang/DrawingPlace"
+                className="underline hover:text-foreground"
+              >
+                开放源代码
+              </a>
+              <a
+                href="https://github.com/HeZeBang/DrawingPlace/issues"
+                className="underline hover:text-foreground"
+              >
                 问题上报
               </a>
-              <a href="https://join.geekpie.club/qq" className="underline hover:text-foreground">加入 GeekPie_</a>
+              <a
+                href="https://join.geekpie.club/qq"
+                className="underline hover:text-foreground"
+              >
+                加入 GeekPie_
+              </a>
             </div>
           </div>
         </div>

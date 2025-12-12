@@ -12,7 +12,15 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { Progress } from "@/components/ui/progress";
-import { Brush, Clock, LogIn, Move, PaintBucket, Ticket, ZoomIn } from "lucide-react";
+import {
+  Brush,
+  Clock,
+  LogIn,
+  Move,
+  PaintBucket,
+  Ticket,
+  ZoomIn,
+} from "lucide-react";
 
 const content = [
   <div>
@@ -29,7 +37,11 @@ const content = [
     <p className="mt-2 text-sm text-muted-foreground">
       游客可以自由的浏览。
       <br />
-      但要参与绘画，你需要先 <LogIn className="inline-block h-[1em] w-[1em] align-sub"/> <b>登录</b>。登录后，你将获得属于你的 <Ticket className="inline-block h-[1em] w-[1em] align-sub"/> <b>绘画 Token</b>。
+      但要参与绘画，你需要先{" "}
+      <LogIn className="inline-block h-[1em] w-[1em] align-sub" /> <b>登录</b>
+      。登录后，你将获得属于你的{" "}
+      <Ticket className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>绘画 Token</b>。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       如果你的 Token 不小心泄漏了，不要担心，你可以随时在设置中重新生成它们。
@@ -38,26 +50,33 @@ const content = [
   <div>
     <h3 className="text-lg font-semibold">操纵画布</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      <Brush className="inline-block h-[1em] w-[1em] align-sub"/> <b>单击鼠标左键</b> 或 <b>触摸屏幕</b> 以绘制像素点
+      <Brush className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>单击鼠标左键</b> 或 <b>触摸屏幕</b> 以绘制像素点
       <br />
-      <ZoomIn className="inline-block h-[1em] w-[1em] align-sub"/> <b>鼠标滚轮</b> 或 <b>双指捏合</b> 以缩放
+      <ZoomIn className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>鼠标滚轮</b> 或 <b>双指捏合</b> 以缩放
       <br />
-      <Move className="inline-block h-[1em] w-[1em] align-sub"/> <b>鼠标中键/右键拖动</b> 或 <b>触摸拖动</b> 以平移
+      <Move className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>鼠标中键/右键拖动</b> 或 <b>触摸拖动</b> 以平移
     </p>
   </div>,
   <div>
     <h3 className="text-lg font-semibold">点数和冷却时间</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      <PaintBucket className="inline-block h-[1em] w-[1em] align-sub"/> <b>点数</b> 是你绘画的“体力值”。
+      <PaintBucket className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>点数</b> 是你绘画的“体力值”。
       <br />
-      每个 Token 每次绘画都会消耗你的一个点数，如果点数为 0，你无法用<b>这个</b> Token 继续绘画。
+      每个 Token 每次绘画都会消耗你的一个点数，如果点数为 0，你无法用<b>
+        这个
+      </b>{" "}
+      Token 继续绘画。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
-      <Clock className="inline-block h-[1em] w-[1em] align-sub"/> <b>冷却时间</b> 是体力回复的时间间隔。
+      <Clock className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>冷却时间</b> 是体力回复的时间间隔。
       <br />
       冷却时间结束后，你的点数会自动 +1，直到达到最大点数。
       <br />
-      
     </p>
   </div>,
   <div>
@@ -68,7 +87,14 @@ const content = [
       甚至你可以<b>写代码</b>来自动化你的绘画过程！
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
-      我们会在 GitHub 上提供 API 文档和官方样例程序，加入 <a href="https://join.geekpie.club/qq" className="underline hover:text-foreground">GeekPie QQ 交流群</a> 来关注我们的最新进展！
+      我们会在 GitHub 上提供 API 文档和官方样例程序，加入{" "}
+      <a
+        href="https://join.geekpie.club/qq"
+        className="underline hover:text-foreground"
+      >
+        GeekPie QQ 交流群
+      </a>{" "}
+      来关注我们的最新进展！
     </p>
   </div>,
   <div>
