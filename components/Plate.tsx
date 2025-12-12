@@ -61,21 +61,21 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
           className={cn(
             "w-8 h-8 rounded-full p-0 border-none",
             selectedColor &&
-              !dataSource.includes(selectedColor.replace("#", "")) &&
-              "ring-2 ring-ring ring-offset-2",
+            !dataSource.includes(selectedColor.replace("#", "")) &&
+            "ring-2 ring-ring ring-offset-2",
           )}
           style={{
             backgroundColor:
               selectedColor &&
-              !dataSource.includes(selectedColor.replace("#", ""))
+                !dataSource.includes(selectedColor.replace("#", ""))
                 ? selectedColor
                 : undefined,
           }}
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-            <Paintbrush className="h-4 w-4" />
-          )}
+              <Paintbrush className="h-4 w-4" />
+            )}
         </Button>
       </ColorPicker>
 
@@ -119,7 +119,10 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
                       token: localStorage.getItem("casdoor_token"),
                     }),
                   })
-                    .then((res) => res.json())
+                    .then((res) => {
+                      if (res.ok) return res.json();
+                      else throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+                    })
                     .then((data) => {
                       if (data.token) {
                         console.log("Draw token received", data.token);
@@ -129,8 +132,8 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
                     .then(() => {
                       toast.info("Token 刷新成功");
                     })
-                    .catch((error) => {
-                      toast.error("Token 刷新失败: ", error.message || error);
+                    .catch((error: Error) => {
+                      toast.error(`Token 刷新失败: ${error.message}`);
                     })
                     .finally(() => {
                       setIsFetching(false);

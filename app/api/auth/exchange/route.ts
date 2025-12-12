@@ -72,15 +72,42 @@ export async function POST(request: Request) {
 
     await dbConnect();
 
-    await UserSession.deleteMany({ userId: userId });
-
     // Generate draw token
     const drawToken = crypto.randomBytes(32).toString("hex");
 
+    // Check token creation frequency and cleanup old sessions atomically
+    const existingSession = await UserSession.findOne({ userId: userId });
+    
+    if (existingSession) {
+      const now = Date.now();
+      const createdAt = new Date(existingSession.createdAt).getTime();
+      const timeSinceCreation = now - createdAt;
+      
+      console.log(`Token check for user ${userId}: last token created ${timeSinceCreation}ms ago`);
+      
+      if (timeSinceCreation < 10 * 1000) {
+        const waitTime = Math.ceil((10 * 1000 - timeSinceCreation) / 1000);
+        console.log(`Token creation too frequent. User must wait ${waitTime}s`);
+        return NextResponse.json(
+          { 
+            error: "Token creation too frequent. Please wait before trying again.",
+            timeSinceCreation: timeSinceCreation / 1000,
+            retryAfter: waitTime
+          },
+          { status: 429, headers: { "Retry-After": waitTime.toString() } },
+        );
+      }
+      
+      // Delete old session using atomic operation
+      await UserSession.findOneAndDelete({ userId: userId });
+    }
+
+    // Create new session
     await UserSession.create({
       userId: userId,
       token: drawToken,
       updatedAt: new Date(),
+      createdAt: new Date(),
     });
 
     console.log(`Generated new token for user ${userId}: ${drawToken}`);
