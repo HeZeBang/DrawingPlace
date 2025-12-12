@@ -38,7 +38,7 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
   return (
     <div className={`flex flex-wrap gap-2 justify-center items-center max-w-[${config.CANVAS_WIDTH}px] mx-auto p-2 bg-card rounded-xl border shadow-sm`}>
       {dataSource.map((color) => (
-        <button
+        <Button
           key={color}
           className={cn(
             "hidden sm:block w-8 h-8 rounded-full border-none transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -52,10 +52,10 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
         />
       ))}
 
-        <button
+        <Button
           key={`cur_${selectedColor}`}
           className={cn(
-            "w-8 h-8 rounded-full border-none sm:hidden transition-all border"
+            "w-8 h-8 rounded-full border-none sm:hidden transition-all border cursor-default"
           )}
           style={{ backgroundColor: selectedColor }}
           aria-label={`Select color ${selectedColor}`}
