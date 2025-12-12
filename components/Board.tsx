@@ -225,6 +225,13 @@ const Board = () => {
                 onDraw={handleDraw}
                 editable={editable}
               />
+              <div className={`bg-black h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse`}
+                style={{
+                  left: location.x + 1,
+                  top: location.y + 1,
+                  backgroundColor: selectedColor || "transparent",
+                }}
+               />
             </div>
           </TransformComponent>
         </TransformWrapper>
