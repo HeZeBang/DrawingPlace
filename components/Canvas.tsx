@@ -30,6 +30,13 @@ const Canvas = ({ dataSource, color, onMove, onDraw, editable }) => {
     }
   }, [dataSource]);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+  }, [canvasRef]);
+
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     if (!editable || !color) return;
