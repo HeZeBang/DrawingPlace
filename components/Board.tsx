@@ -261,15 +261,14 @@ const Board = () => {
             onSelectColor={setSelectedColor}
             selectedColor={selectedColor}
           />
-          <div className="text-xs text-center">
-            <span className="pb-1">{title} 简易教程</span>
-            <div className="text-muted-foreground text-xs text-center flex gap-4">
-              <span>1. 调色盘中选择颜色，点击即可绘制1个像素点。</span>
-              <span>2. Ctrl + 滚轮/双指捏合实现缩放</span>
-              <span>3. 中键和右键/手指拖动实现平移</span>
-              <span>
-                4. 每个 token 每次绘制有 {delay}s 冷却时间，快来创作吧！
-              </span>
+          <div className="text-xs text-center flex flex-col">
+            <span className="">{title}</span>
+            <span className="text-muted-foreground">Made with ❤️ by ZAMBAR at GeekPie_</span>
+            <div className="text-muted-foreground flex gap-1 justify-center">
+              <a href="#" onClick={() => {setShowGuideModal(true)}}>使用说明</a>
+              <a href="https://github.com/HeZeBang/DrawingPlace">开放源代码</a>
+              <a href="https://github.com/HeZeBang/DrawingPlace/issues">问题上报</a>
+              <a href="https://join.geekpie.club/qq">加入 GeekPie_</a>
             </div>
           </div>
         </div>

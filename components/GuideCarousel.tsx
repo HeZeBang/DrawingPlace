@@ -18,63 +18,70 @@ const content = [
     <h3 className="text-lg font-semibold">欢迎来到 Paint2025！</h3>
     <img src="/icon.svg" alt="App Icon" className="mx-auto w-full" />
     <p className="mt-2 text-sm text-muted-foreground">
-      Paint2025 是一个多人在线协作的画布，你可以与所有用户同时创作、覆盖、合作或对抗！
+      Paint2025 是一个多人在线协作的画布，你可以与所有用户同时创作、覆盖、合作或对抗！共同定格 2025 年的美好回忆！
     </p>
   </div>,
   <div>
     <h3 className="text-lg font-semibold">登录以开始</h3>
     <p className="mt-2 text-sm text-muted-foreground">
       游客可以自由的浏览。
-    </p>
-    <p className="mt-2 text-sm text-muted-foreground">
-      但要参与绘画，你需要先登录。登录后，你将获得属于你的绘画 Token。
+      <br/>
+      但要参与绘画，你需要先登录。登录后，你将获得属于你的<b>绘画 Token</b>。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       如果你的 Token 不小心泄漏了，不要担心，你可以随时在设置中重新生成它们。
     </p>
   </div>,
   <div>
+    <h3 className="text-lg font-semibold">操纵画布</h3>
+    <p className="mt-2 text-sm text-muted-foreground">
+      <b>单击鼠标左键</b> 或 <b>触摸屏幕</b> 以绘制像素点
+      <br/>
+      <b>Ctrl + 鼠标滚轮</b> 或 <b>双指捏合</b> 以缩放画布
+      <br/>
+      <b>鼠标中键/右键拖动</b> 或 <b>触摸拖动</b> 以平移画布
+    </p>
+  </div>,
+  <div>
     <h3 className="text-lg font-semibold">冷却时间</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      每个 Token 每次绘画都会消耗你的一个点数，并且会触发冷却时间。
+      每个 Token 每次绘画都会消耗你的一个点数，并且会触发<b>冷却时间</b>。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
-      在冷却时间内，你无法用这个 Token 继续绘画。
+      在冷却时间内，你无法用<b>这个</b> Token 继续绘画。
     </p>
   </div>,
   <div>
     <h3 className="text-lg font-semibold">独行？结伴？还是代码小子？</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      你可以选择独自作画，或者收集他人的 Token 来和他们一起绘画。
-    </p>
-    <p className="mt-2 text-sm text-muted-foreground">
-      甚至你可以写代码来自动化你的绘画过程！
+      你可以选择<b>独自作画</b>，或者<b>收集</b>他人的 Token 来和他们一起绘画。
+      <br/>
+      甚至你可以<b>写代码</b>来自动化你的绘画过程！
     </p>
   </div>,
   <div>
     <h3 className="text-lg font-semibold">不允许！</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      🚫 请不要绘制任何不适当的内容，包括但不限于色情、暴力、仇恨言论等。
-    </p>
-    <p className="mt-2 text-sm text-muted-foreground">
+      🚫 请不要绘制任何不适当的内容，包括但不限于涉政、色情、暴力、仇恨言论等。
+      <br/>
       🚫 请不要攻击服务器，公开他人信息。
-    </p>
-    <p className="mt-2 text-sm text-muted-foreground">
+      <br/>
       🚫 请不要用显然随意的像素点或图案破坏他人的作品或者搞得一团糟。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       ⚠️ 违反规定的用户可能会被封禁。
+      <br/>
     </p>
   </div>,
   <div>
     <h3 className="text-lg font-semibold">一起创造 2025 的回忆！</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      我们将在 2026/01/01 关闭 Paint2025，届时将会用推文记录下大家的杰作。
+      我们将<b>在 2026/01/01 关闭 Paint2025</b>，届时将会用推文记录下大家的杰作。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       快来留下你的印记吧！祝你玩得开心！
     </p>
-    <p className="mt-2 text-sm text-muted-foreground">
+    <p className="mt-8 text-sm text-muted-foreground w-full text-right">
       ——GeekPie 团队
     </p>
   </div>,

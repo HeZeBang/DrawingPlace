@@ -39,6 +39,9 @@ const GuideModal = ({
           >
             明白了
           </button>
+          <span className="text-xs text-muted-foreground">
+            提示：你可以随时在页面底部点击“使用说明”再次查看本指南。
+          </span>
         </div>
       </div>
     </div>
