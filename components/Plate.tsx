@@ -39,7 +39,7 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
         <button
           key={color}
           className={cn(
-            "w-8 h-8 rounded-full border-none transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            "hidden sm:block w-8 h-8 rounded-full border-none transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
             selectedColor === "#" + color
               ? "border-primary scale-110 ring-2 ring-ring ring-offset-2"
               : "border-transparent",
@@ -50,18 +50,27 @@ const Plate = ({ dataSource, onSelectColor, selectedColor }) => {
         />
       ))}
 
+        <button
+          key={`cur_${selectedColor}`}
+          className={cn(
+            "w-8 h-8 rounded-full border-none sm:hidden transition-all border"
+          )}
+          style={{ backgroundColor: selectedColor }}
+          aria-label={`Select color ${selectedColor}`}
+        />
+
       <div className="w-px h-8 bg-border mx-2" />
 
       <ColorPicker
         value={selectedColor || "#000000"}
-        // swatches={[selectedColor || '#000000']}
+        // swatches={dataSource.map((color) => "#" + color)}
         onValueChange={(color) => onSelectColor(color.hex)}
       >
         <Button
           variant="outline"
           size="icon"
           className={cn(
-            "w-8 h-8 rounded-full p-0 border-none",
+            `w-8 h-8 rounded-full p-0 border-none`,
             selectedColor &&
             !dataSource.includes(selectedColor.replace("#", "")) &&
             "ring-2 ring-ring ring-offset-2",

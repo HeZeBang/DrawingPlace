@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Field, FieldLabel, FieldError } from "./field";
 
 function getColorAsHsva(
   color: `#${string}` | HsvaColor | HslaColor | RgbaColor,
@@ -47,6 +48,15 @@ function getColorAsHsva(
     return rgbaToHsva(color);
   } else {
     return hslaToHsva(color);
+  }
+}
+
+function isValidHexColor(hex: string): boolean {
+  try {
+    hexToHsva(hex);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -198,10 +208,29 @@ function ColorPicker({
               )}
               {colorType === "hex" && (
                 <Input
-                  className="flex"
-                  value={hsvaToHex(colorHsv)}
+                  id="hex-input"
+                  key={hsvaToHex(colorHsv)}
+                  className="flex transition-all"
+                  defaultValue={hsvaToHex(colorHsv)}
+                  onBlur={(e) => {
+                    const value = e.target.value;
+                    if (isValidHexColor(value)) {
+                      try {(e.target as HTMLInputElement).classList.remove("ring-red-500", "ring-2", "focus-visible:ring-red-500"); }
+                      catch {};
+                      handleValueChange(hexToHsva(value));
+                    } else {
+                      (e.target as HTMLInputElement).classList.add("ring-red-500", "ring-2", "focus-visible:ring-red-500");
+                    }
+                  }}
                   onChange={(e) => {
-                    setColorHsv(hexToHsva(e.target.value));
+                    const value = e.target.value;
+                    if (!isValidHexColor(value)) {
+                      (e.target as HTMLInputElement).classList.add("ring-red-500", "ring-2", "focus-visible:ring-red-500");
+                    } else {
+                      try {(e.target as HTMLInputElement).classList.remove("ring-red-500", "ring-2", "focus-visible:ring-red-500"); }
+                      catch {};
+
+                    }
                   }}
                 />
               )}
@@ -229,9 +258,9 @@ function ColorPicker({
                         "--swatch-color": color,
                       } as React.CSSProperties
                     }
-                    onClick={() => setColorHsv(hexToHsva(color))}
+                    onClick={() => handleValueChange(hexToHsva(color))}
                     onKeyUp={(e) =>
-                      e.key === "Enter" ? setColorHsv(hexToHsva(color)) : null
+                      e.key === "Enter" ? handleValueChange(hexToHsva(color)) : null
                     }
                     aria-label={`Set color to ${color}`}
                     className="size-5 cursor-pointer rounded bg-[var(--swatch-color)] ring-2 ring-[var(--swatch-color)00] ring-offset-1 ring-offset-background transition-all duration-100 hover:ring-[var(--swatch-color)]"
@@ -374,55 +403,93 @@ function ObjectColorInput({
   label,
   onValueChange,
 }: ObjectColorInputProps) {
-  function handleChange(val: HslaColor | RgbaColor) {
+  const [localValue, setLocalValue] = React.useState<HslaColor | RgbaColor>(value);
+
+  React.useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  function handleChange(key: string, newVal: string) {
+    if (["r", "g", "b"].includes(key)) {
+      newVal = Math.min(255, Math.max(0, Number(newVal))).toString();
+    } else if (["s", "l"].includes(key)) {
+      newVal = Math.min(100, Math.max(0, Number(newVal))).toString();
+    } else if (key === "h") {
+      newVal = Math.min(360, Math.max(0, Number(newVal))).toString();
+    }
+    setLocalValue((prev) => ({
+      ...prev,
+      [key]: newVal,
+    }));
+  }
+
+  function handleBlur() {
     if (onValueChange) {
-      label === "hsl"
-        ? onValueChange({
-            ...value,
-            ...val,
-          })
-        : onValueChange({
-            ...value,
-            ...val,
-          });
+      if (label === "hsl") {
+        onValueChange(localValue as HslaColor);
+      } else {
+        onValueChange(localValue as RgbaColor);
+      }
     }
   }
+
+  if (label === "hsl") {
+    const hslValue = localValue as HslaColor;
+    return (
+      <div className="-mt-px flex">
+        <div className="relative min-w-0 flex-1 focus-within:z-10">
+          <Input
+            className="peer rounded-e-none shadow-none [direction:inherit]"
+            value={String(hslValue.h)}
+            onChange={(e) => handleChange("h", e.target.value)}
+            onBlur={handleBlur}
+          />
+        </div>
+        <div className="relative -ms-px min-w-0 flex-1 focus-within:z-10">
+          <Input
+            className="peer rounded-none shadow-none [direction:inherit]"
+            value={String(hslValue.s)}
+            onChange={(e) => handleChange("s", e.target.value)}
+            onBlur={handleBlur}
+          />
+        </div>
+        <div className="relative -ms-px min-w-0 flex-1 focus-within:z-10">
+          <Input
+            className="peer rounded-s-none shadow-none [direction:inherit]"
+            value={String(hslValue.l)}
+            onChange={(e) => handleChange("l", e.target.value)}
+            onBlur={handleBlur}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const rgbValue = localValue as RgbaColor;
   return (
     <div className="-mt-px flex">
       <div className="relative min-w-0 flex-1 focus-within:z-10">
         <Input
           className="peer rounded-e-none shadow-none [direction:inherit]"
-          value={label === "hsl" ? value.h.toFixed(0) : value.r}
-          onChange={(e) =>
-            handleChange({
-              ...value,
-              [label === "hsl" ? "h" : "r"]: e.target.value,
-            })
-          }
+          value={String(rgbValue.r)}
+          onChange={(e) => handleChange("r", e.target.value)}
+          onBlur={handleBlur}
         />
       </div>
       <div className="relative -ms-px min-w-0 flex-1 focus-within:z-10">
         <Input
           className="peer rounded-none shadow-none [direction:inherit]"
-          value={label === "hsl" ? value.s.toFixed(0) : value.g}
-          onChange={(e) =>
-            handleChange({
-              ...value,
-              [label === "hsl" ? "s" : "g"]: e.target.value,
-            })
-          }
+          value={String(rgbValue.g)}
+          onChange={(e) => handleChange("g", e.target.value)}
+          onBlur={handleBlur}
         />
       </div>
       <div className="relative -ms-px min-w-0 flex-1 focus-within:z-10">
         <Input
           className="peer rounded-s-none shadow-none [direction:inherit]"
-          value={label === "hsl" ? value.l.toFixed(0) : value.b}
-          onChange={(e) =>
-            handleChange({
-              ...value,
-              [label === "hsl" ? "l" : "b"]: e.target.value,
-            })
-          }
+          value={String(rgbValue.b)}
+          onChange={(e) => handleChange("b", e.target.value)}
+          onBlur={handleBlur}
         />
       </div>
     </div>
