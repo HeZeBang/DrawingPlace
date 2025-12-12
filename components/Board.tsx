@@ -152,7 +152,7 @@ const Board = () => {
     <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
       {/* Top Info Bar */}
       <div className="bg-card border-b p-3 flex justify-between items-center text-sm font-medium z-10 shrink-0 shadow-sm">
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 sm:flex">
           <ZoomIn className="w-4 h-4 text-muted-foreground" />
           <span>{Math.round(ratio * 100)}%</span>
         </div>
@@ -194,7 +194,7 @@ const Board = () => {
               className="flex items-center gap-1 text-primary hover:underline text-xs"
             >
               <LogIn className="w-4 h-4" />
-              <span>登录</span>
+              <span className="sm:block hidden">登录</span>
             </button>
           )}
         </div>
