@@ -318,20 +318,21 @@ const Board = () => {
             <span className="text-muted-foreground">
               Made with ❤️ by ZAMBAR at GeekPie_
             </span>
-            <div className="text-muted-foreground flex gap-1 justify-center">
+            <div className="text-muted-foreground flex gap-3 pt-1 justify-center">
               <a
                 href="#"
+                className="underline hover:text-foreground"
                 onClick={() => {
                   setShowGuideModal(true);
                 }}
               >
                 使用说明
               </a>
-              <a href="https://github.com/HeZeBang/DrawingPlace">开放源代码</a>
-              <a href="https://github.com/HeZeBang/DrawingPlace/issues">
+              <a href="https://github.com/HeZeBang/DrawingPlace"className="underline hover:text-foreground">开放源代码</a>
+              <a href="https://github.com/HeZeBang/DrawingPlace/issues" className="underline hover:text-foreground">
                 问题上报
               </a>
-              <a href="https://join.geekpie.club/qq">加入 GeekPie_</a>
+              <a href="https://join.geekpie.club/qq" className="underline hover:text-foreground">加入 GeekPie_</a>
             </div>
           </div>
         </div>

@@ -67,6 +67,9 @@ const content = [
       <br />
       甚至你可以<b>写代码</b>来自动化你的绘画过程！
     </p>
+    <p className="mt-2 text-sm text-muted-foreground">
+      我们会在 GitHub 上提供 API 文档和官方样例程序，加入 <a href="https://join.geekpie.club/qq" className="underline hover:text-foreground">GeekPie QQ 交流群</a> 来关注我们的最新进展！
+    </p>
   </div>,
   <div>
     <h3 className="text-lg font-semibold">不允许！</h3>
