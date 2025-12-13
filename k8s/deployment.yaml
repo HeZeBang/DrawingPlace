@@ -14,21 +14,15 @@ data:
   MONGO_URI: "mongodb://mongo:27017/place"
   MONGO_URI_CLIENT: "mongodb://mongo:27017/place"
   DRAW_DELAY_MS: "5000"
+  DRAW_MAX_POINTS: "24"
+  CANVAS_WIDTH: "1534"
+  CANVAS_HEIGHT: "1009"
   # GeekPie Casdoor 配置
   CASDOOR_SERVER_URL: ""
   CASDOOR_CLIENT_ID: ""
   CASDOOR_CLIENT_SECRET: ""
   CASDOOR_APP_NAME: ""
   CASDOOR_ORGANIZATION_NAME: ""
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ghcr-secret
-  namespace: drawing-place
-type: kubernetes.io/dockerconfigjson
-data:
-  .dockerconfigjson: ""
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -101,8 +95,6 @@ spec:
       labels:
         app: drawing-place
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       containers:
         - name: drawing-place
           image: ghcr.io/hezebang/drawingplace:latest
@@ -111,13 +103,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: drawing-place-config
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
           livenessProbe:
             httpGet:
               path: /
