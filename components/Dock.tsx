@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Button } from "@/components/ui/button";
-import { Paintbrush, Palette } from "lucide-react";
+import { Paintbrush, Palette, Settings } from "lucide-react";
 import { Input } from "./ui/input";
 import {
   AlertDialog,
@@ -18,6 +18,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { SettingsDrawer } from "./Settings";
+import { useSettingsConfigContext } from "./SettingsProvider";
 
 const Dock = ({
   dataSource,
@@ -27,6 +39,7 @@ const Dock = ({
   isValid,
 }) => {
   const { config } = useRuntimeConfigContext();
+  const { config: settingsConfig } = useSettingsConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -78,23 +91,37 @@ const Dock = ({
           className={cn(
             `w-8 h-8 rounded-full p-0 border-none`,
             selectedColor &&
-              !dataSource.includes(selectedColor.replace("#", "")) &&
-              "ring-2 ring-ring ring-offset-2",
+            !dataSource.includes(selectedColor.replace("#", "")) &&
+            "ring-2 ring-ring ring-offset-2",
           )}
           style={{
             backgroundColor:
               selectedColor &&
-              !dataSource.includes(selectedColor.replace("#", ""))
+                !dataSource.includes(selectedColor.replace("#", ""))
                 ? selectedColor
                 : undefined,
           }}
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-            <Palette className="h-4 w-4" />
-          )}
+              <Palette className="h-4 w-4" />
+            )}
         </Button>
       </ColorPicker>
+
+      {/* <div className="w-px h-8 bg-border mx-2" /> */}
+
+      <SettingsDrawer>
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(
+            `w-8 h-8 rounded-full p-0 border-none`,
+          )}
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+      </SettingsDrawer>
 
       <div className="w-px h-8 bg-border mx-2" />
 

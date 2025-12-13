@@ -61,7 +61,6 @@ export const getRuntimeConfig = () => {
   };
 };
 
-// 客户端配置类型
 export interface RuntimeConfig {
   CASDOOR_SERVER_URL: string;
   CASDOOR_CLIENT_ID: string;

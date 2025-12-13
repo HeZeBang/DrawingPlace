@@ -20,6 +20,7 @@ import { AppError, AppErrorCode } from "@/lib/err";
 import GuideModal from "./GuideModal";
 import { useBackpack } from "@/lib/use-backpack";
 import { DrawRequestSchema } from "@/lib/schemas";
+import { useSettingsConfigContext } from "./SettingsProvider";
 
 let socket;
 
@@ -48,6 +49,7 @@ const Board = () => {
     config.DRAW_DELAY_MS,
   );
   const [token, setToken] = useState<string | null>(null);
+  const { config: settingsConfig } = useSettingsConfigContext();
   const [isConnected, setIsConnected] = useState(false);
   const [isValid, setIsValid] = useState(false);
   const isFetchingRef = useRef(false);
@@ -302,14 +304,15 @@ const Board = () => {
                 onDraw={handleDraw}
                 editable={pointsLeft > 0 && editable}
               />
-              <div
-                className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse ring-[0.1px] ring-black ring-offset-[0.1px]`}
-                style={{
-                  left: location.x + 1,
-                  top: location.y + 1,
-                  backgroundColor: selectedColor || "transparent",
-                }}
-              />
+              {settingsConfig.useOverlay &&
+                <div
+                  className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse ring-[0.1px] ring-black ring-offset-[0.1px]`}
+                  style={{
+                    left: location.x + 1,
+                    top: location.y + 1,
+                    backgroundColor: selectedColor || "transparent",
+                  }}
+                />}
             </div>
           </TransformComponent>
         </TransformWrapper>

@@ -1,5 +1,6 @@
 import { Toaster } from "sonner";
 import { CasdoorSDKWrapper } from "@/components/CasdoorSDKWrapper";
+import { SettingsConfigProvider } from "@/components/SettingsProvider";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <CasdoorSDKWrapper>{children}</CasdoorSDKWrapper>
+        <SettingsConfigProvider>
+          <CasdoorSDKWrapper>{children}</CasdoorSDKWrapper>
+        </SettingsConfigProvider>
         <Toaster richColors />
       </body>
     </html>
