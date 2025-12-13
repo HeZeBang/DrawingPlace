@@ -155,12 +155,12 @@ export default function GuideCarousel({
   }, [current, count, setIsFinished]);
 
   return (
-    <div className="mx-auto max-w-xs py-4">
+    <div className="mx-auto max-w-xs w-full py-4">
       <Carousel setApi={setApi} className="w-full max-w-xs">
         <CarouselContent className="pb-2">
           {Array.from({ length: content.length }).map((_, index) => (
             <CarouselItem key={index} className="my-auto">
-              <Card>
+              <Card className="shadow-none border-none">
                 <CardContent className="flex aspect-video items-center justify-center p-6">
                   {content[index]}
                 </CardContent>

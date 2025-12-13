@@ -1,6 +1,25 @@
-import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 import GuideCarousel from "./GuideCarousel";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const GuideModal = ({
   isOpen,
@@ -11,41 +30,47 @@ const GuideModal = ({
   onClickBtn: () => void;
   onClose: () => void;
 }) => {
-  const [title, setTitle] = useState("Drawing Place");
   const [isFinished, setIsFinished] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)")
 
-  useEffect(() => {
-    setTitle(process.env.META_TITLE || document.title || "Drawing Place");
-  }, []);
-
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-lg bg-background p-6 shadow-lg border">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </button>
-        <div className="flex flex-col space-y-4 text-center">
-          <h2 className="text-lg font-semibold">初来乍到？这是使用Tips！</h2>
+  if (isDesktop) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>初来乍到？这是使用Tips！</DialogTitle>
+            <DialogDescription>
+              你可以随时在页面底部点击“使用说明”再次查看本指南。
+            </DialogDescription>
+          </DialogHeader>
           <GuideCarousel setIsFinished={setIsFinished} />
-          <button
-            onClick={onClickBtn}
-            disabled={!isFinished}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
-          >
-            明白了
-          </button>
-          <span className="text-xs text-muted-foreground">
-            提示：你可以随时在页面底部点击“使用说明”再次查看本指南。
-          </span>
-        </div>
-      </div>
-    </div>
-  );
+          <Button disabled={!isFinished} onClick={onClickBtn}>明白啦</Button>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  return (
+    <Drawer open={isOpen} onOpenChange={onClose}>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>初来乍到？这是使用Tips！</DrawerTitle>
+          <DrawerDescription>
+            你可以随时在页面底部点击“使用说明”再次查看本指南。
+          </DrawerDescription>
+        </DrawerHeader>
+        <GuideCarousel setIsFinished={setIsFinished} />
+        <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button disabled={!isFinished} onClick={onClickBtn}>明白啦</Button>
+          </DrawerClose>
+          <DrawerClose asChild>
+            <Button variant="outline">跳过</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  )
 };
 
 export default GuideModal;

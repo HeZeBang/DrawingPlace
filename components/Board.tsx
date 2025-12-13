@@ -347,7 +347,7 @@ const Board = () => {
           <div className="text-xs text-center flex flex-col">
             <span className="">{title}</span>
             <span className="text-muted-foreground">
-              Made with ❤️ by ZAMBAR at GeekPie_
+              Made with ❤️ by <a href="https://github.com/HeZeBang" className="underline hover:text-foreground">ZAMBAR</a> at <a href="https://geekpie.club" className="underline hover:text-foreground">GeekPie</a>
             </span>
             <div className="text-muted-foreground flex gap-3 pt-1 justify-center">
               <a
@@ -375,7 +375,7 @@ const Board = () => {
                 href="https://join.geekpie.club/qq"
                 className="underline hover:text-foreground"
               >
-                加入 GeekPie_
+                加入 GeekPie
               </a>
             </div>
           </div>
