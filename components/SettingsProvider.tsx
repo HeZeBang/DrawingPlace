@@ -1,7 +1,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { FrontendStatus, SettingsConfig, defaultSettingsConfig } from "@/lib/frontend-settings";
+import {
+  FrontendStatus,
+  SettingsConfig,
+  defaultSettingsConfig,
+} from "@/lib/frontend-settings";
 
 const SettingsContext = createContext<{
   config: SettingsConfig;
@@ -46,10 +50,12 @@ export function SettingsConfigProvider({
 
   const updateStatus = (updates: Partial<FrontendStatus>) => {
     setStatus((prev) => ({ ...prev, ...updates }));
-  }
+  };
 
   return (
-    <SettingsContext.Provider value={{ config, updateConfig, status, updateStatus }}>
+    <SettingsContext.Provider
+      value={{ config, updateConfig, status, updateStatus }}
+    >
       {children}
     </SettingsContext.Provider>
   );

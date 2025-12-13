@@ -49,7 +49,12 @@ const Board = () => {
     config.DRAW_DELAY_MS,
   );
   const [token, setToken] = useState<string | null>(null);
-  const { config: settingsConfig, updateConfig: updateSettingsConfig, status: statusConfig, updateStatus: updateStatusConfig } = useSettingsConfigContext();
+  const {
+    config: settingsConfig,
+    updateConfig: updateSettingsConfig,
+    status: statusConfig,
+    updateStatus: updateStatusConfig,
+  } = useSettingsConfigContext();
   const isFetchingRef = useRef(false);
   const bufferRef = useRef<any[]>([]);
 
@@ -186,28 +191,24 @@ const Board = () => {
       }
 
       // Emit to server with token and handle response
-      socket.emit(
-        "draw",
-        payload,
-        (result: AppError) => {
-          if (result.code === AppErrorCode.Success) {
-            // Success: Add point and start delay
-            setPoints((prev) => [...prev, params]);
-            consumePoint();
-          } else if (result.code === AppErrorCode.InsufficientPoints) {
-            // Handle rate limit countdown
-            syncFromServer(
-              result.pointsLeft || 0,
-              result.lastUpdate || Date.now(),
-            );
-            toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
-          } else {
-            // Failed: Show error message or handle failure
-            // Could add a toast notification here
-            toast.error(`绘制失败：${result.message || "未知错误"}`);
-          }
-        },
-      );
+      socket.emit("draw", payload, (result: AppError) => {
+        if (result.code === AppErrorCode.Success) {
+          // Success: Add point and start delay
+          setPoints((prev) => [...prev, params]);
+          consumePoint();
+        } else if (result.code === AppErrorCode.InsufficientPoints) {
+          // Handle rate limit countdown
+          syncFromServer(
+            result.pointsLeft || 0,
+            result.lastUpdate || Date.now(),
+          );
+          toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
+        } else {
+          // Failed: Show error message or handle failure
+          // Could add a toast notification here
+          toast.error(`绘制失败：${result.message || "未知错误"}`);
+        }
+      });
     },
     [
       editable,
@@ -302,7 +303,7 @@ const Board = () => {
                 onDraw={handleDraw}
                 editable={pointsLeft > 0 && editable}
               />
-              {settingsConfig.useOverlay &&
+              {settingsConfig.useOverlay && (
                 <div
                   className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse ring-[0.1px] ring-black ring-offset-[0.1px]`}
                   style={{
@@ -310,7 +311,8 @@ const Board = () => {
                     top: location.y + 1,
                     backgroundColor: selectedColor || "transparent",
                   }}
-                />}
+                />
+              )}
             </div>
           </TransformComponent>
         </TransformWrapper>
@@ -344,7 +346,20 @@ const Board = () => {
           <div className="text-xs text-center flex flex-col">
             <span className="">{title}</span>
             <span className="text-muted-foreground">
-              Made with ❤️ by <a href="https://github.com/HeZeBang" className="underline hover:text-foreground">ZAMBAR</a> at <a href="https://geekpie.club" className="underline hover:text-foreground">GeekPie</a>
+              Made with ❤️ by{" "}
+              <a
+                href="https://github.com/HeZeBang"
+                className="underline hover:text-foreground"
+              >
+                ZAMBAR
+              </a>{" "}
+              at{" "}
+              <a
+                href="https://geekpie.club"
+                className="underline hover:text-foreground"
+              >
+                GeekPie
+              </a>
             </span>
             <div className="text-muted-foreground flex gap-3 pt-1 justify-center">
               <a

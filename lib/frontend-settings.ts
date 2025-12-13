@@ -19,7 +19,7 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     label: "加载时显示使用说明",
     description: "是否自动显示使用说明指南",
     displayType: "boolean",
-  }
+  },
 };
 
 export const defaultSettingsConfig: SettingsConfig = {

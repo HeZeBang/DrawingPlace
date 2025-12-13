@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -17,7 +17,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import GuideCarousel from "./GuideCarousel";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -31,7 +31,7 @@ const GuideModal = ({
   onClose: () => void;
 }) => {
   const [isFinished, setIsFinished] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
@@ -44,10 +44,12 @@ const GuideModal = ({
             </DialogDescription>
           </DialogHeader>
           <GuideCarousel setIsFinished={setIsFinished} />
-          <Button disabled={!isFinished} onClick={onClickBtn}>明白啦</Button>
+          <Button disabled={!isFinished} onClick={onClickBtn}>
+            明白啦
+          </Button>
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
@@ -62,7 +64,9 @@ const GuideModal = ({
         <GuideCarousel setIsFinished={setIsFinished} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
-            <Button disabled={!isFinished} onClick={onClickBtn}>明白啦</Button>
+            <Button disabled={!isFinished} onClick={onClickBtn}>
+              明白啦
+            </Button>
           </DrawerClose>
           <DrawerClose asChild>
             <Button variant="outline">跳过</Button>
@@ -70,7 +74,7 @@ const GuideModal = ({
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
-  )
+  );
 };
 
 export default GuideModal;

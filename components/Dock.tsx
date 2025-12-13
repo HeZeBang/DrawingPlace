@@ -27,16 +27,11 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import { SettingsDrawer } from "./Settings";
 import { useSettingsConfigContext } from "./SettingsProvider";
 
-const Dock = ({
-  dataSource,
-  onSelectColor,
-  selectedColor,
-  updateToken,
-}) => {
+const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
   const { config } = useRuntimeConfigContext();
   const { status: statusConfig } = useSettingsConfigContext();
   if (!dataSource) return null;
@@ -90,21 +85,21 @@ const Dock = ({
           className={cn(
             `w-8 h-8 rounded-full p-0 border-none`,
             selectedColor &&
-            !dataSource.includes(selectedColor.replace("#", "")) &&
-            "ring-2 ring-ring ring-offset-2",
+              !dataSource.includes(selectedColor.replace("#", "")) &&
+              "ring-2 ring-ring ring-offset-2",
           )}
           style={{
             backgroundColor:
               selectedColor &&
-                !dataSource.includes(selectedColor.replace("#", ""))
+              !dataSource.includes(selectedColor.replace("#", ""))
                 ? selectedColor
                 : undefined,
           }}
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-              <Palette className="h-4 w-4" />
-            )}
+            <Palette className="h-4 w-4" />
+          )}
         </Button>
       </ColorPicker>
 
@@ -114,9 +109,7 @@ const Dock = ({
         <Button
           variant="outline"
           size="icon"
-          className={cn(
-            `w-8 h-8 rounded-full p-0 border-none`,
-          )}
+          className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
         >
           <Settings className="h-4 w-4" />
         </Button>

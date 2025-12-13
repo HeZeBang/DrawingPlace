@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -22,24 +22,22 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useSettingsConfigContext } from "@/components/SettingsProvider"
-import { SettingsEntries, StatusEntries } from "@/lib/frontend-settings"
-import { Switch } from "./ui/switch"
-import { Separator } from "./ui/separator"
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useSettingsConfigContext } from "@/components/SettingsProvider";
+import { SettingsEntries, StatusEntries } from "@/lib/frontend-settings";
+import { Switch } from "./ui/switch";
+import { Separator } from "./ui/separator";
 
 export function SettingsDrawer({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false)
-  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const [open, setOpen] = React.useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
+        <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>设置</DialogTitle>
@@ -50,14 +48,12 @@ export function SettingsDrawer({ children }: { children: React.ReactNode }) {
           <SettingsContent />
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        {children}
-      </DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>设置</DrawerTitle>
@@ -73,7 +69,7 @@ export function SettingsDrawer({ children }: { children: React.ReactNode }) {
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
-  )
+  );
 }
 
 function SettingsContent({ className }: React.ComponentProps<"form">) {
@@ -81,8 +77,8 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
 
   return (
     <form className={cn("grid items-start gap-6 py-2", className)}>
-      {
-        Object.entries(SettingsEntries).map(([key, { label, description, displayType }]) => {
+      {Object.entries(SettingsEntries).map(
+        ([key, { label, description, displayType }]) => {
           if (displayType === "boolean") {
             return (
               <div key={key} className="grid gap-1.5">
@@ -97,14 +93,11 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
                   <Label htmlFor={key}>{label}</Label>
                 </div>
                 {description && (
-                  <p className="text-sm text-muted-foreground">
-                    {description}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 )}
               </div>
-            )
-          }
-          else {
+            );
+          } else {
             return (
               <div key={key} className="grid gap-1.5">
                 <Label htmlFor={key}>{label}</Label>
@@ -118,11 +111,11 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
               </div>
             );
           }
-        })
-      }
+        },
+      )}
       <Separator />
-      {
-        Object.entries(StatusEntries).map(([key, { label, description, isHidden, mapFunction }]) => {
+      {Object.entries(StatusEntries).map(
+        ([key, { label, description, isHidden, mapFunction }]) => {
           if (isHidden) return null;
           return (
             <div key={key} className="grid gap-1.5">
@@ -135,14 +128,12 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
                 </p>
               </div>
               {description && (
-                <p className="text-sm text-muted-foreground">
-                  {description}
-                </p>
+                <p className="text-sm text-muted-foreground">{description}</p>
               )}
             </div>
-          )
-        })
-      }
+          );
+        },
+      )}
     </form>
-  )
+  );
 }
