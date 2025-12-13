@@ -26,8 +26,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useSettingsConfigContext } from "@/components/SettingsProvider"
-import { SettingsEntries } from "@/lib/frontend-settings"
+import { SettingsEntries, StatusEntries } from "@/lib/frontend-settings"
 import { Switch } from "./ui/switch"
+import { Separator } from "./ui/separator"
 
 export function SettingsDrawer({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false)
@@ -76,7 +77,7 @@ export function SettingsDrawer({ children }: { children: React.ReactNode }) {
 }
 
 function SettingsContent({ className }: React.ComponentProps<"form">) {
-  const { config, updateConfig } = useSettingsConfigContext();
+  const { config, updateConfig, status } = useSettingsConfigContext();
 
   return (
     <form className={cn("grid items-start gap-6 py-2", className)}>
@@ -117,6 +118,29 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
               </div>
             );
           }
+        })
+      }
+      <Separator />
+      {
+        Object.entries(StatusEntries).map(([key, { label, description, displayType, isHidden, mapFunction }]) => {
+          if (isHidden) return null;
+          return (
+            <div key={key} className="grid gap-1.5">
+              <div className="flex items-center space-x-2">
+                <Label>{label}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {mapFunction
+                    ? mapFunction((status as any)[key])
+                    : (status as any)[key].toString()}
+                </p>
+              </div>
+              {description && (
+                <p className="text-sm text-muted-foreground">
+                  {description}
+                </p>
+              )}
+            </div>
+          )
         })
       }
     </form>

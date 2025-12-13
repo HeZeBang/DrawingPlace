@@ -49,9 +49,7 @@ const Board = () => {
     config.DRAW_DELAY_MS,
   );
   const [token, setToken] = useState<string | null>(null);
-  const { config: settingsConfig, updateConfig: updateSettingsConfig } = useSettingsConfigContext();
-  const [isConnected, setIsConnected] = useState(false);
-  const [isValid, setIsValid] = useState(false);
+  const { config: settingsConfig, updateConfig: updateSettingsConfig, status: statusConfig, updateStatus: updateStatusConfig } = useSettingsConfigContext();
   const isFetchingRef = useRef(false);
   const bufferRef = useRef<any[]>([]);
 
@@ -114,25 +112,25 @@ const Board = () => {
 
     socket.on("connect", () => {
       console.log("Connected to socket");
-      setIsConnected(true);
+      updateStatusConfig({ isConnected: true });
       fetchData();
     });
 
     socket.on("authenticated", () => {
       console.log("Authenticated");
-      setIsValid(true);
+      updateStatusConfig({ isTokenValid: true });
     });
 
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err);
-      setIsConnected(false);
-      setIsValid(false);
+      toast.error(`连接错误: ${err.message}`);
+      updateStatusConfig({ isConnected: false, isTokenValid: false });
     });
 
     socket.on("disconnect", () => {
       console.log("Disconnected from socket");
-      setIsConnected(false);
-      setIsValid(false);
+      toast.error("与服务器的连接已断开");
+      updateStatusConfig({ isConnected: false });
     });
 
     socket.on("draw", (data) => {
@@ -250,8 +248,8 @@ const Board = () => {
         </div>
         <div className="flex items-center gap-2 ml-4 border-l pl-4">
           <div
-            className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
-            title={isConnected ? "Connected" : "Disconnected"}
+            className={`w-2 h-2 rounded-full ${statusConfig.isConnected ? "bg-green-500" : "bg-red-500"}`}
+            title={statusConfig.isConnected ? "Connected" : "Disconnected"}
           />
           {user ? (
             <div className="flex items-center gap-2">
@@ -342,7 +340,6 @@ const Board = () => {
             onSelectColor={setSelectedColor}
             selectedColor={selectedColor}
             updateToken={setToken}
-            isValid={isValid}
           />
           <div className="text-xs text-center flex flex-col">
             <span className="">{title}</span>

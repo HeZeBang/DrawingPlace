@@ -1,11 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { SettingsConfig, defaultSettingsConfig } from "@/lib/frontend-settings";
+import { FrontendStatus, SettingsConfig, defaultSettingsConfig } from "@/lib/frontend-settings";
 
 const SettingsContext = createContext<{
   config: SettingsConfig;
   updateConfig: (updates: Partial<SettingsConfig>) => void;
+  status: FrontendStatus;
+  updateStatus: (updates: Partial<FrontendStatus>) => void;
 } | null>(null);
 
 export function SettingsConfigProvider({
@@ -35,8 +37,19 @@ export function SettingsConfigProvider({
     setConfig((prev) => ({ ...prev, ...updates }));
   };
 
+  const [status, setStatus] = useState<FrontendStatus>({
+    isLoading: false,
+    isConnected: false,
+    isTokenValid: false,
+    isLoggedIn: false,
+  });
+
+  const updateStatus = (updates: Partial<FrontendStatus>) => {
+    setStatus((prev) => ({ ...prev, ...updates }));
+  }
+
   return (
-    <SettingsContext.Provider value={{ config, updateConfig }}>
+    <SettingsContext.Provider value={{ config, updateConfig, status, updateStatus }}>
       {children}
     </SettingsContext.Provider>
   );

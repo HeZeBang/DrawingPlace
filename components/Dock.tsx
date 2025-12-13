@@ -36,10 +36,9 @@ const Dock = ({
   onSelectColor,
   selectedColor,
   updateToken,
-  isValid,
 }) => {
   const { config } = useRuntimeConfigContext();
-  const { config: settingsConfig } = useSettingsConfigContext();
+  const { status: statusConfig } = useSettingsConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -138,7 +137,7 @@ const Dock = ({
           }}
           className={cn(
             "transition-all",
-            isValid ? "border-green-500" : "border-red-500",
+            statusConfig.isTokenValid ? "border-green-500" : "border-red-500",
           )}
           disabled={isFetching}
         />
