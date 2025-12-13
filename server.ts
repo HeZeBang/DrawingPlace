@@ -7,7 +7,7 @@ import Point from "./models/Point";
 import Action from "./models/Action";
 import UserSession from "./models/UserSession";
 import { AppError, AppErrorCode } from "./lib/err";
-import { z } from "zod";
+import { DrawRequestSchema } from "./lib/schemas";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -25,30 +25,6 @@ console.log("Environment Variables:", serverConfig);
 const dev = serverConfig.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
-
-const DrawDataSchema = z.object({
-  x: z
-    .number()
-    .min(0)
-    .max(parseInt(serverConfig.CANVAS_WIDTH || "-1", 10) - 1),
-  y: z
-    .number()
-    .min(0)
-    .max(parseInt(serverConfig.CANVAS_HEIGHT || "-1", 10) - 1),
-  w: z.number().min(1).max(1),
-  h: z.number().min(1).max(1),
-  c: z
-    .string()
-    .min(7)
-    .max(7)
-    .regex(/^#[0-9a-fA-F]{6}$/), // color code like #ffffff
-});
-
-const DrawRequestSchema = z.object({
-  token: z.string().min(1),
-  data: DrawDataSchema,
-});
-type DrawRequest = z.infer<typeof DrawRequestSchema>;
 
 // 初始化数据库连接
 dbConnect()

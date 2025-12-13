@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import UserSession from "@/models/UserSession";
+import { ExchangeTokenRequestSchema } from "@/lib/schemas";
 import crypto from "crypto";
 
 // Server-side Casdoor config
@@ -16,11 +17,16 @@ const serverConfig = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { token } = body;
+    const parseResult = ExchangeTokenRequestSchema.safeParse(body);
 
-    if (!token) {
-      return NextResponse.json({ error: "Token is required" }, { status: 400 });
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: parseResult.error.format() },
+        { status: 400 },
+      );
     }
+
+    const { token } = parseResult.data;
 
     // Verify Casdoor token and get user info via OIDC userinfo endpoint
     const userinfoUrl = `${serverConfig.serverUrl}/api/userinfo`;

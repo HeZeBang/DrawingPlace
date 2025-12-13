@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import io from "socket.io-client";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { AppError, AppErrorCode } from "@/lib/err";
 import GuideModal from "./GuideModal";
 import { useBackpack } from "@/lib/use-backpack";
+import { DrawRequestSchema } from "@/lib/schemas";
 
 let socket;
 
@@ -49,6 +50,8 @@ const Board = () => {
   const [token, setToken] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isValid, setIsValid] = useState(false);
+  const isFetchingRef = useRef(false);
+  const bufferRef = useRef<any[]>([]);
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
@@ -74,16 +77,27 @@ const Board = () => {
       }
     }
 
+    const fetchData = () => {
+      isFetchingRef.current = true;
+      bufferRef.current = [];
+      fetch("/api/place")
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.status) {
+            const buffered = bufferRef.current;
+            setPoints([...res.data.points, ...buffered]);
+            setColors(res.data.colors);
+            setDelay(res.data.delay || config.DRAW_DELAY_MS);
+          }
+        })
+        .finally(() => {
+          isFetchingRef.current = false;
+          bufferRef.current = [];
+        });
+    };
+
     // Load initial data
-    fetch("/api/place")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.status) {
-          setPoints(res.data.points);
-          setColors(res.data.colors);
-          setDelay(res.data.delay || config.DRAW_DELAY_MS);
-        }
-      });
+    fetchData();
 
     // Connect socket
     if (!token || token.length === 0) {
@@ -99,6 +113,7 @@ const Board = () => {
     socket.on("connect", () => {
       console.log("Connected to socket");
       setIsConnected(true);
+      fetchData();
     });
 
     socket.on("authenticated", () => {
@@ -119,7 +134,11 @@ const Board = () => {
     });
 
     socket.on("draw", (data) => {
-      setPoints((prev) => [...prev, data]);
+      if (isFetchingRef.current) {
+        bufferRef.current.push(data);
+      } else {
+        setPoints((prev) => [...prev, data]);
+      }
     });
 
     socket.on("sync", (data) => {
@@ -154,13 +173,22 @@ const Board = () => {
 
       if (!editable || pointsLeft <= 0) return;
 
+      const payload = {
+        token: token,
+        data: params,
+      };
+
+      const validation = DrawRequestSchema.safeParse(payload);
+      if (!validation.success) {
+        const errorMsg = validation.error.message || "Invalid draw request";
+        toast.error(`验证失败: ${errorMsg}`);
+        return;
+      }
+
       // Emit to server with token and handle response
       socket.emit(
         "draw",
-        {
-          token: token,
-          data: params,
-        },
+        payload,
         (result: AppError) => {
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and start delay
