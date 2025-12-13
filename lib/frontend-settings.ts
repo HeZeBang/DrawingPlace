@@ -104,5 +104,5 @@ export const StatusEntries: Record<keyof FrontendStatus, StatusEntry> = {
     label: "当前视图模式",
     // description: "应用当前的视图显示模式",
     isHidden: true,
-  }
+  },
 };

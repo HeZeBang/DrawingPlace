@@ -80,7 +80,10 @@ const Canvas = ({ dataSource, color, onMove, onDraw, editable, opacity }) => {
       ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      className={cn("block react-zoom-pan-pinch-no-pan z-0", editable ? "cursor-crosshair" : "cursor-default")}
+      className={cn(
+        "block react-zoom-pan-pinch-no-pan z-0",
+        editable ? "cursor-crosshair" : "cursor-default",
+      )}
       style={{
         width: size.width + "px",
         height: size.height + "px",

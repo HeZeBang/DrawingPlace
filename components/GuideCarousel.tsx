@@ -54,7 +54,8 @@ const content = [
   <div>
     <h3 className="text-lg font-semibold">在绘画模式下操纵画布</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      处于 <Brush className="inline-block h-[1em] w-[1em] align-sub" /> <b>绘画模式</b> 时，你可以绘制像素
+      处于 <Brush className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>绘画模式</b> 时，你可以绘制像素
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       <Brush className="inline-block h-[1em] w-[1em] align-sub" />{" "}
@@ -70,7 +71,8 @@ const content = [
   <div>
     <h3 className="text-lg font-semibold">在浏览模式下操纵画布</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      处于 <View className="inline-block h-[1em] w-[1em] align-sub" /> <b>浏览模式</b> 时，你可以自由浏览
+      处于 <View className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>浏览模式</b> 时，你可以自由浏览
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       <PointerOff className="inline-block h-[1em] w-[1em] align-sub" />{" "}
@@ -86,10 +88,7 @@ const content = [
       <PaintBucket className="inline-block h-[1em] w-[1em] align-sub" />{" "}
       <b>点数</b> 是你绘画的“体力值”。
       <br />
-      每个 Token 每次绘画都会消耗你的一个点数，如果点数为 0，你无法用<b>
-        这个
-      </b>{" "}
-      Token 继续绘画。
+      每个 Token 每次绘画都会消耗你的一个点数，如果点数为 0，你就无法继续绘画。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">
       <Clock className="inline-block h-[1em] w-[1em] align-sub" />{" "}

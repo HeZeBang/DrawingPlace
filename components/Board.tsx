@@ -308,7 +308,10 @@ const Board = () => {
             <div
               className="bg-background shadow-2xl border border-border"
               style={{
-                backgroundImage: statusConfig.currentViewMode !== ViewMode.CanvasOnly ? `url(/map.png)` : undefined,
+                backgroundImage:
+                  statusConfig.currentViewMode !== ViewMode.CanvasOnly
+                    ? `url(/map.png)`
+                    : undefined,
                 imageRendering: ratio > 1 ? "pixelated" : "auto",
               }}
             >
@@ -318,11 +321,16 @@ const Board = () => {
                 onMove={handleMove}
                 onDraw={handleDraw}
                 editable={pointsLeft > 0 && editable}
-                opacity={statusConfig.currentViewMode !== ViewMode.MapOnly ? "1" : "0"}
+                opacity={
+                  statusConfig.currentViewMode !== ViewMode.MapOnly ? "1" : "0"
+                }
               />
               {settingsConfig.useOverlay && (
                 <div
-                  className={cn("h-[1px] w-[1px] pointer-events-none z-10 absolute ring-[0.1px] ring-black ring-offset-[0.1px]", editable ? "animate-pulse" : "opacity-50")}
+                  className={cn(
+                    "h-[1px] w-[1px] pointer-events-none z-10 absolute ring-[0.1px] ring-black ring-offset-[0.1px]",
+                    editable ? "animate-pulse" : "opacity-50",
+                  )}
                   style={{
                     left: location.x + 1,
                     top: location.y + 1,
@@ -353,17 +361,25 @@ const Board = () => {
           <Button
             variant="outline"
             size="sm"
-            className={cn("w-fit h-8 rounded-full px-3 border-none transition-all duration-500",
+            className={cn(
+              "w-fit h-8 rounded-full px-3 border-none transition-all duration-500",
               editable ? "" : "opacity-30",
-              "hover:opacity-100 delay-1000 hover:delay-0"
+              "hover:opacity-100 delay-1000 hover:delay-0",
             )}
-            onClick={() => { setEditable((val) => !val) }}
+            onClick={() => {
+              setEditable((val) => !val);
+            }}
           >
-            {editable ?
-              <Brush className="h-4 w-4" /> :
+            {editable ? (
+              <Brush className="h-4 w-4" />
+            ) : (
               <View className="h-4 w-4" />
-            }
-            {editable ? <span className="">绘制模式</span> : <span className="">浏览模式</span>}
+            )}
+            {editable ? (
+              <span className="">绘制模式</span>
+            ) : (
+              <span className="">浏览模式</span>
+            )}
           </Button>
         </div>
       </div>
@@ -371,7 +387,12 @@ const Board = () => {
       {/* Bottom Control Area */}
       <div className="bg-card border-t p-4 z-10 shrink-0">
         <div className="flex flex-col items-center gap-4">
-          <div className={cn("transition-all ease-in-out duration-500 overflow-hidden", editable ? "max-h-32" : "max-h-0")}>
+          <div
+            className={cn(
+              "transition-all ease-in-out duration-500 overflow-hidden",
+              editable ? "max-h-32" : "max-h-0",
+            )}
+          >
             <Dock
               dataSource={colors}
               onSelectColor={setSelectedColor}

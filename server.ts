@@ -176,8 +176,10 @@ app.prepare().then(() => {
         return;
       }
 
-      if (data.x > parseInt(serverConfig.CANVAS_WIDTH || "1000") - 1 ||
-          data.y > parseInt(serverConfig.CANVAS_HEIGHT || "1000") - 1) {
+      if (
+        data.x > parseInt(serverConfig.CANVAS_WIDTH || "1000") - 1 ||
+        data.y > parseInt(serverConfig.CANVAS_HEIGHT || "1000") - 1
+      ) {
         console.error("Draw position out of bounds");
         if (cb)
           cb({

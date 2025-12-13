@@ -3,7 +3,14 @@ import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeClosed, EyeOff, Paintbrush, Palette, Settings } from "lucide-react";
+import {
+  Eye,
+  EyeClosed,
+  EyeOff,
+  Paintbrush,
+  Palette,
+  Settings,
+} from "lucide-react";
 import { Input } from "./ui/input";
 import {
   AlertDialog,
@@ -34,7 +41,8 @@ import { ViewMode } from "@/lib/frontend-settings";
 
 const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
   const { config } = useRuntimeConfigContext();
-  const { status: statusConfig, updateStatus: updateStatusConfig } = useSettingsConfigContext();
+  const { status: statusConfig, updateStatus: updateStatusConfig } =
+    useSettingsConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -84,21 +92,21 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
           className={cn(
             `w-8 h-8 rounded-full p-0 border-none`,
             selectedColor &&
-            !dataSource.includes(selectedColor.replace("#", "")) &&
-            "ring-2 ring-ring ring-offset-2",
+              !dataSource.includes(selectedColor.replace("#", "")) &&
+              "ring-2 ring-ring ring-offset-2",
           )}
           style={{
             backgroundColor:
               selectedColor &&
-                !dataSource.includes(selectedColor.replace("#", ""))
+              !dataSource.includes(selectedColor.replace("#", ""))
                 ? selectedColor
                 : undefined,
           }}
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-              <Palette className="h-4 w-4" />
-            )}
+            <Palette className="h-4 w-4" />
+          )}
         </Button>
       </ColorPicker>
 
@@ -108,11 +116,21 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
         variant="outline"
         size="icon"
         className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
-        onClick={() => {updateStatusConfig({ currentViewMode: (statusConfig.currentViewMode + 1) % 3 });}}
+        onClick={() => {
+          updateStatusConfig({
+            currentViewMode: (statusConfig.currentViewMode + 1) % 3,
+          });
+        }}
       >
-        {statusConfig.currentViewMode === ViewMode.CanvasOnly && (<EyeClosed className="h-4 w-4" />)}
-        {statusConfig.currentViewMode === ViewMode.MapOnly && (<EyeOff className="h-4 w-4" />)}
-        {statusConfig.currentViewMode === ViewMode.Mix && (<Eye className="h-4 w-4" />)}
+        {statusConfig.currentViewMode === ViewMode.CanvasOnly && (
+          <EyeClosed className="h-4 w-4" />
+        )}
+        {statusConfig.currentViewMode === ViewMode.MapOnly && (
+          <EyeOff className="h-4 w-4" />
+        )}
+        {statusConfig.currentViewMode === ViewMode.Mix && (
+          <Eye className="h-4 w-4" />
+        )}
       </Button>
 
       <SettingsDrawer>

@@ -1,14 +1,8 @@
 import { z } from "zod";
 
 export const DrawDataSchema = z.object({
-  x: z
-    .number()
-    .min(0)
-    .int(),
-  y: z
-    .number()
-    .min(0)
-    .int(),
+  x: z.number().min(0).int(),
+  y: z.number().min(0).int(),
   w: z.number().min(1).max(1),
   h: z.number().min(1).max(1),
   c: z
