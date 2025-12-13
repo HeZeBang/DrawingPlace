@@ -3,11 +3,17 @@
 export interface SettingsConfig {
   useOverlay: boolean; // Whether to use overlay indicator
   showGuideOnLoad: boolean; // Whether to show the guide modal on load
+  startAutoDraw: boolean; // Whether to start auto-draw feature
+  xAutoDraw: number; // X coordinate for auto-draw start
+  yAutoDraw: number; // Y coordinate for auto-draw start
+  dataAutoDraw?: string; // Image data for auto-draw
+  progressAutoDraw?: number; // Number of pixels drawn by auto-draw
 }
 
 export interface SettingsEntry {
   label: string;
   description?: string;
+  isHidden?: boolean;
   displayType: "boolean" | "number" | "string";
 }
 
@@ -22,11 +28,44 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     description: "是否自动显示使用说明指南",
     displayType: "boolean",
   },
+  startAutoDraw: {
+    label: "启动自动绘图",
+    description: "开启后，应用将自动根据上传的图片进行绘图",
+    isHidden: true,
+    displayType: "boolean",
+  },
+  xAutoDraw: {
+    label: "自动绘图 x 轴起点",
+    description: "自动绘图时的起始 x 坐标",
+    isHidden: true,
+    displayType: "number",
+  },
+  yAutoDraw: {
+    label: "自动绘图 y 轴起点",
+    description: "自动绘图时的起始 y 坐标",
+    isHidden: true,
+    displayType: "number",
+  },
+  dataAutoDraw: {
+    label: "自动绘图图片数据",
+    description: "用于自动绘图的图片数据",
+    isHidden: true,
+    displayType: "string",
+  },
+  progressAutoDraw: {
+    label: "自动绘图进度",
+    description: "自动绘图已绘制的像素数量",
+    isHidden: true,
+    displayType: "number",
+  },
 };
 
 export const defaultSettingsConfig: SettingsConfig = {
   useOverlay: true,
   showGuideOnLoad: true,
+  startAutoDraw: false,
+  xAutoDraw: -1,
+  yAutoDraw: -1,
 };
 
 // Frontend status interface and entries

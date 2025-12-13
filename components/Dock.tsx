@@ -8,6 +8,7 @@ import {
   EyeClosed,
   EyeOff,
   Paintbrush,
+  PaintRoller,
   Palette,
   Settings,
 } from "lucide-react";
@@ -38,6 +39,7 @@ import {
 import { SettingsDrawer } from "./Settings";
 import { useSettingsConfigContext } from "./SettingsProvider";
 import { ViewMode } from "@/lib/frontend-settings";
+import AutoDrawModal from "./AutoDrawModal";
 
 const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
   const { config } = useRuntimeConfigContext();
@@ -92,21 +94,21 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
           className={cn(
             `w-8 h-8 rounded-full p-0 border-none`,
             selectedColor &&
-              !dataSource.includes(selectedColor.replace("#", "")) &&
-              "ring-2 ring-ring ring-offset-2",
+            !dataSource.includes(selectedColor.replace("#", "")) &&
+            "ring-2 ring-ring ring-offset-2",
           )}
           style={{
             backgroundColor:
               selectedColor &&
-              !dataSource.includes(selectedColor.replace("#", ""))
+                !dataSource.includes(selectedColor.replace("#", ""))
                 ? selectedColor
                 : undefined,
           }}
         >
           {(!selectedColor ||
             dataSource.includes(selectedColor.replace("#", ""))) && (
-            <Palette className="h-4 w-4" />
-          )}
+              <Palette className="h-4 w-4" />
+            )}
         </Button>
       </ColorPicker>
 
@@ -132,6 +134,16 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
           <Eye className="h-4 w-4" />
         )}
       </Button>
+
+      <AutoDrawModal>
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
+        >
+          <PaintRoller className="h-4 w-4" />
+        </Button>
+      </AutoDrawModal>
 
       <SettingsDrawer>
         <Button
