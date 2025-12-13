@@ -300,7 +300,8 @@ const Board = () => {
           doubleClick={{ disabled: true }}
         >
           <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
-            <div className="bg-background shadow-2xl border border-border"
+            <div
+              className="bg-background shadow-2xl border border-border"
               style={{
                 backgroundImage: `url(/map.png)`,
                 imageRendering: ratio > 1 ? "pixelated" : "auto",
@@ -403,7 +404,7 @@ const Board = () => {
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 

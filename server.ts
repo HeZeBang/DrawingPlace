@@ -111,7 +111,7 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log("Client connected");
-    
+
     // Increment connected clients count
     onlineClientsCount++;
     console.log(`Connected clients: ${onlineClientsCount}`);
@@ -253,7 +253,7 @@ app.prepare().then(() => {
 
     socket.on("disconnect", () => {
       console.log("Client disconnected");
-      
+
       // Decrement connected clients count
       onlineClientsCount--;
       console.log(`Connected clients: ${onlineClientsCount}`);
