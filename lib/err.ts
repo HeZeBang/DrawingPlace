@@ -4,6 +4,7 @@ export enum AppErrorCode {
   UnknownError = -2,
   InvalidRequest = -3,
   InsufficientPoints = -4,
+  InvalidPosition = -5,
 }
 
 export interface AppError {

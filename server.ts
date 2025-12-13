@@ -176,6 +176,17 @@ app.prepare().then(() => {
         return;
       }
 
+      if (data.x > parseInt(serverConfig.CANVAS_WIDTH || "1000") - 1 ||
+          data.y > parseInt(serverConfig.CANVAS_HEIGHT || "1000") - 1) {
+        console.error("Draw position out of bounds");
+        if (cb)
+          cb({
+            code: AppErrorCode.InvalidPosition,
+            message: "Draw position out of bounds",
+          });
+        return;
+      }
+
       // Rate limit check: updated for pack system
       const maxPoints = serverConfig.DRAW_MAX_POINTS
         ? parseInt(serverConfig.DRAW_MAX_POINTS)

@@ -1,17 +1,14 @@
 import { z } from "zod";
 
-const CANVAS_WIDTH = parseInt(process.env.CANVAS_WIDTH || "1000", 10);
-const CANVAS_HEIGHT = parseInt(process.env.CANVAS_HEIGHT || "1000", 10);
-
 export const DrawDataSchema = z.object({
   x: z
     .number()
     .min(0)
-    .max(CANVAS_WIDTH - 1),
+    .int(),
   y: z
     .number()
     .min(0)
-    .max(CANVAS_HEIGHT - 1),
+    .int(),
   w: z.number().min(1).max(1),
   h: z.number().min(1).max(1),
   c: z
