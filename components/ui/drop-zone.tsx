@@ -38,6 +38,10 @@ const PixelCanvas = ({
       canvas.height = finalHeight;
       ctx.imageSmoothingEnabled = false;
 
+      // Fill white background to ensure opacity
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, finalWidth, finalHeight);
+
       ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
       
       const dataUrl = canvas.toDataURL("image/png");

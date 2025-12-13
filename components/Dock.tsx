@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Button } from "@/components/ui/button";
 import {
+  Bot,
   Eye,
   EyeClosed,
   EyeOff,
@@ -41,7 +42,7 @@ import { useSettingsConfigContext } from "./SettingsProvider";
 import { ViewMode } from "@/lib/frontend-settings";
 import AutoDrawModal from "./AutoDrawModal";
 
-const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
+const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken, handleDraw }) => {
   const { config } = useRuntimeConfigContext();
   const { status: statusConfig, updateStatus: updateStatusConfig } =
     useSettingsConfigContext();
@@ -135,13 +136,13 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
         )}
       </Button>
 
-      <AutoDrawModal>
+      <AutoDrawModal handleDraw={handleDraw}>
         <Button
           variant="outline"
           size="icon"
           className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
         >
-          <PaintRoller className="h-4 w-4" />
+          <Bot className="h-4 w-4" />
         </Button>
       </AutoDrawModal>
 

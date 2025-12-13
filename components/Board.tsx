@@ -11,10 +11,12 @@ import {
   PaintBucket,
   Brush,
   View,
+  Bot,
 } from "lucide-react";
 import Canvas from "./Canvas";
 import Dock from "./Dock";
 import LoginModal from "./LoginModal";
+import AutoDrawModal from "./AutoDrawModal";
 import { getCasdoorSdk } from "@/lib/casdoor";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from "sonner";
@@ -179,45 +181,55 @@ const Board = () => {
   };
 
   const handleDraw = useCallback(
-    (params) => {
-      const token = localStorage.getItem("draw_token") || "";
-      if (!user || !token) {
-        setShowLoginModal(true);
-        return;
-      }
-
-      if (!editable || pointsLeft <= 0) return;
-
-      const payload = {
-        token: token,
-        data: params,
-      };
-
-      const validation = DrawRequestSchema.safeParse(payload);
-      if (!validation.success) {
-        const errorMsg = validation.error.message || "Invalid draw request";
-        toast.error(`验证失败: ${errorMsg}`);
-        return;
-      }
-
-      // Emit to server with token and handle response
-      socket.emit("draw", payload, (result: AppError) => {
-        if (result.code === AppErrorCode.Success) {
-          // Success: Add point and start delay
-          setPoints((prev) => [...prev, params]);
-          consumePoint();
-        } else if (result.code === AppErrorCode.InsufficientPoints) {
-          // Handle rate limit countdown
-          syncFromServer(
-            result.pointsLeft || 0,
-            result.lastUpdate || Date.now(),
-          );
-          toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
-        } else {
-          // Failed: Show error message or handle failure
-          // Could add a toast notification here
-          toast.error(`绘制失败：${result.message || "未知错误"}`);
+    (params): Promise<{ success: boolean; nextRecoverIn?: number }> => {
+      return new Promise((resolve) => {
+        const token = localStorage.getItem("draw_token") || "";
+        if (!user || !token) {
+          setShowLoginModal(true);
+          resolve({ success: false });
+          return;
         }
+
+        if (!editable || pointsLeft <= 0) {
+          resolve({ success: false, nextRecoverIn });
+          return;
+        }
+
+        const payload = {
+          token: token,
+          data: params,
+        };
+
+        const validation = DrawRequestSchema.safeParse(payload);
+        if (!validation.success) {
+          const errorMsg = validation.error.message || "Invalid draw request";
+          toast.error(`验证失败: ${errorMsg}`);
+          resolve({ success: false });
+          return;
+        }
+
+        // Emit to server with token and handle response
+        socket.emit("draw", payload, (result: AppError) => {
+          if (result.code === AppErrorCode.Success) {
+            // Success: Add point and start delay
+            setPoints((prev) => [...prev, params]);
+            consumePoint();
+            resolve({ success: true });
+          } else if (result.code === AppErrorCode.InsufficientPoints) {
+            // Handle rate limit countdown
+            syncFromServer(
+              result.pointsLeft || 0,
+              result.lastUpdate || Date.now(),
+            );
+            toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
+            resolve({ success: false, nextRecoverIn });
+          } else {
+            // Failed: Show error message or handle failure
+            // Could add a toast notification here
+            toast.error(`绘制失败：${result.message || "未知错误"}`);
+            resolve({ success: false });
+          }
+        });
       });
     },
     [
@@ -228,6 +240,68 @@ const Board = () => {
       nextRecoverIn,
       consumePoint,
       config.DRAW_MAX_POINTS,
+      syncFromServer,
+    ],
+  );
+
+
+  const handleAutoDraw = useCallback(
+    (params): Promise<{ success: boolean; nextRecoverIn?: number }> => {
+      return new Promise((resolve) => {
+        const token = localStorage.getItem("draw_token") || "";
+        if (!token) {
+          resolve({ success: false, nextRecoverIn: 1000 });
+          return;
+        }
+
+        if (!editable || pointsLeft <= 0) {
+          resolve({ success: false, nextRecoverIn });
+          return;
+        }
+
+        const payload = {
+          token: token,
+          data: params,
+        };
+
+        const validation = DrawRequestSchema.safeParse(payload);
+        if (!validation.success) {
+          const errorMsg = validation.error.message || "Invalid draw request";
+          resolve({ success: false });
+          return;
+        }
+
+        // Emit to server with token and handle response
+        socket.emit("draw", payload, (result: AppError) => {
+          if (result.code === AppErrorCode.Success) {
+            // Success: Add point and start delay
+            setPoints((prev) => [...prev, params]);
+            consumePoint();
+            resolve({ success: true });
+          } else if (result.code === AppErrorCode.InsufficientPoints) {
+            // Handle rate limit countdown
+            syncFromServer(
+              result.pointsLeft || 0,
+              result.lastUpdate || Date.now(),
+            );
+            resolve({ success: false, nextRecoverIn });
+          } else {
+            // Failed: Show error message or handle failure
+            // Could add a toast notification here
+            toast.error(`绘制失败：${result.message || "未知错误"}`);
+            resolve({ success: false });
+          }
+        });
+      });
+    },
+    [
+      editable,
+      delay,
+      pointsLeft,
+      nextRecoverIn,
+      consumePoint,
+      config.DRAW_MAX_POINTS,
+      syncFromServer,
     ],
   );
 
@@ -398,6 +472,7 @@ const Board = () => {
               onSelectColor={setSelectedColor}
               selectedColor={selectedColor}
               updateToken={setToken}
+              handleDraw={handleAutoDraw}
             />
           </div>
           <div className="text-xs text-center flex flex-col">
