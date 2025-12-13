@@ -352,14 +352,18 @@ const Board = () => {
         <div className="absolute bottom-4 mx-auto flex gap-3">
           <Button
             variant="outline"
-            size="icon"
-            className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
+            size="sm"
+            className={cn("w-fit h-8 rounded-full px-3 border-none transition-all duration-500",
+              editable ? "" : "opacity-30",
+              "hover:opacity-100 delay-1000 hover:delay-0"
+            )}
             onClick={() => { setEditable((val) => !val) }}
           >
             {editable ?
               <Brush className="h-4 w-4" /> :
               <View className="h-4 w-4" />
             }
+            {editable ? <span className="">绘制模式</span> : <span className="">浏览模式</span>}
           </Button>
         </div>
       </div>
