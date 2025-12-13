@@ -37,7 +37,7 @@ const DrawDataSchema = z.object({
     .max(parseInt(serverConfig.CANVAS_HEIGHT || "-1", 10) - 1),
   w: z.number().min(1).max(1),
   h: z.number().min(1).max(1),
-  c: z.string().min(7).max(7), // color code like #ffffff
+  c: z.string().min(7).max(7).regex(/^#[0-9a-fA-F]{6}$/), // color code like #ffffff
 });
 
 const DrawRequestSchema = z.object({

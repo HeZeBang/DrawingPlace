@@ -6,10 +6,10 @@ export async function GET() {
   await dbConnect();
 
   const colors = [
-    "000",
-    "fff",
-    "aaa",
-    "555",
+    "000000",
+    "ffffff",
+    "aaaaaa",
+    "555555",
     "fed3c7",
     "ffc4ce",
     "faac8e",
