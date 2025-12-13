@@ -76,6 +76,9 @@ async function createAction(params: any) {
   }
 }
 
+// Global state for statistics
+let onlineClientsCount = 0;
+
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
@@ -108,6 +111,11 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log("Client connected");
+    
+    // Increment connected clients count
+    onlineClientsCount++;
+    console.log(`Connected clients: ${onlineClientsCount}`);
+    io.emit("onlineClientsUpdated", { count: onlineClientsCount });
 
     // set token to roomId
     const roomId = socket.data.token;
@@ -245,8 +253,16 @@ app.prepare().then(() => {
 
     socket.on("disconnect", () => {
       console.log("Client disconnected");
+      
+      // Decrement connected clients count
+      onlineClientsCount--;
+      console.log(`Connected clients: ${onlineClientsCount}`);
+      io.emit("onlineClientsUpdated", { count: onlineClientsCount });
     });
   });
+
+  // Export function to get online clients count
+  const getOnlineClients = () => onlineClientsCount;
 
   const port = process.env.PORT || 3000;
 

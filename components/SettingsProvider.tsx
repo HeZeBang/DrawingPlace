@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   FrontendStatus,
   SettingsConfig,
+  defaultFrontendStatus,
   defaultSettingsConfig,
 } from "@/lib/frontend-settings";
 
@@ -41,12 +42,7 @@ export function SettingsConfigProvider({
     setConfig((prev) => ({ ...prev, ...updates }));
   };
 
-  const [status, setStatus] = useState<FrontendStatus>({
-    isLoading: false,
-    isConnected: false,
-    isTokenValid: false,
-    isLoggedIn: false,
-  });
+  const [status, setStatus] = useState<FrontendStatus>(defaultFrontendStatus);
 
   const updateStatus = (updates: Partial<FrontendStatus>) => {
     setStatus((prev) => ({ ...prev, ...updates }));

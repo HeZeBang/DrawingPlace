@@ -1,3 +1,5 @@
+// Frontend settings interface and entries
+
 export interface SettingsConfig {
   useOverlay: boolean; // Whether to use overlay indicator
   showGuideOnLoad: boolean; // Whether to show the guide modal on load
@@ -27,12 +29,27 @@ export const defaultSettingsConfig: SettingsConfig = {
   showGuideOnLoad: true,
 };
 
+// Frontend status interface and entries
+
 export interface FrontendStatus {
   isLoading: boolean;
   isConnected: boolean;
   isTokenValid: boolean;
   isLoggedIn: boolean;
+  onlineClients: number;
+  // totalActions: number;
+  // totalUsers: number;
 }
+
+export const defaultFrontendStatus: FrontendStatus = {
+  isLoading: false,
+  isConnected: false,
+  isTokenValid: false,
+  isLoggedIn: false,
+  onlineClients: 0,
+  // totalActions: 0,
+  // totalUsers: 0,
+};
 
 export interface StatusEntry {
   label: string;
@@ -54,13 +71,25 @@ export const StatusEntries: Record<keyof FrontendStatus, StatusEntry> = {
   },
   isTokenValid: {
     label: "Token 有效性",
-    description: "当前绘图 Token 是否有效",
+    // description: "当前绘图 Token 是否有效",
     mapFunction: (value: boolean) => (value ? "有效" : "无效"),
   },
   isLoggedIn: {
     label: "登录状态",
-    description: "用户是否已通过身份验证登录",
+    // description: "用户是否已通过身份验证登录",
     isHidden: true,
     mapFunction: (value: boolean) => (value ? "已登录" : "未登录"),
   },
+  onlineClients: {
+    label: "当前在线",
+    // description: "当前正在使用应用的在线客户端数量",
+  },
+  // totalActions: {
+  //   label: "总落笔数",
+  //   // description: "自应用启动以来的落笔总数",
+  // },
+  // totalUsers: {
+  //   label: "总用户数",
+  //   // description: "自应用启动以来的独立用户总数",
+  // },
 };

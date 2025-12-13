@@ -117,6 +117,7 @@ const Board = () => {
 
     socket.on("connect", () => {
       console.log("Connected to socket");
+      toast.success("已连接到服务器");
       updateStatusConfig({ isConnected: true });
       fetchData();
     });
@@ -128,7 +129,6 @@ const Board = () => {
 
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err);
-      toast.error(`连接错误: ${err.message}`);
       updateStatusConfig({ isConnected: false, isTokenValid: false });
     });
 
@@ -136,6 +136,11 @@ const Board = () => {
       console.log("Disconnected from socket");
       toast.error("与服务器的连接已断开");
       updateStatusConfig({ isConnected: false });
+    });
+
+    socket.on("onlineClientsUpdated", (data) => {
+      console.log("Current connected clients:", data.count);
+      updateStatusConfig({ onlineClients: data.count });
     });
 
     socket.on("draw", (data) => {
