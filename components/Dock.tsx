@@ -73,8 +73,6 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
         aria-label={`Select color ${selectedColor}`}
       />
 
-      <div className="w-px h-8 bg-border mx-2" />
-
       <ColorPicker
         value={selectedColor || "#000000"}
         // swatches={dataSource.map((color) => "#" + color)}
@@ -103,6 +101,8 @@ const Dock = ({ dataSource, onSelectColor, selectedColor, updateToken }) => {
             )}
         </Button>
       </ColorPicker>
+
+      <div className="w-px h-8 bg-border mx-2" />
 
       <Button
         variant="outline"

@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useEffect } from "react";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
+import { cn } from "@/lib/utils";
 
 const Canvas = ({ dataSource, color, onMove, onDraw, editable, opacity }) => {
   const canvasRef = useRef(null);
@@ -79,7 +80,7 @@ const Canvas = ({ dataSource, color, onMove, onDraw, editable, opacity }) => {
       ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      className="cursor-crosshair block react-zoom-pan-pinch-no-pan z-0"
+      className={cn("block react-zoom-pan-pinch-no-pan z-0", editable ? "cursor-crosshair" : "cursor-default")}
       style={{
         width: size.width + "px",
         height: size.height + "px",

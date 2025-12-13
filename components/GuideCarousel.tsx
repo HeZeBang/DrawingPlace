@@ -14,11 +14,15 @@ import {
 import { Progress } from "@/components/ui/progress";
 import {
   Brush,
+  CircleSlash,
   Clock,
+  Hand,
   LogIn,
   Move,
   PaintBucket,
+  PointerOff,
   Ticket,
+  View,
   ZoomIn,
 } from "lucide-react";
 
@@ -48,7 +52,10 @@ const content = [
     </p>
   </div>,
   <div>
-    <h3 className="text-lg font-semibold">操纵画布</h3>
+    <h3 className="text-lg font-semibold">在绘画模式下操纵画布</h3>
+    <p className="mt-2 text-sm text-muted-foreground">
+      处于 <Brush className="inline-block h-[1em] w-[1em] align-sub" /> <b>绘画模式</b> 时，你可以绘制像素
+    </p>
     <p className="mt-2 text-sm text-muted-foreground">
       <Brush className="inline-block h-[1em] w-[1em] align-sub" />{" "}
       <b>单击鼠标左键</b> 或 <b>触摸屏幕</b> 以绘制像素点
@@ -58,6 +65,19 @@ const content = [
       <br />
       <Move className="inline-block h-[1em] w-[1em] align-sub" />{" "}
       <b>鼠标中键/右键拖动</b> 或 <b>触摸拖动</b> 以平移
+    </p>
+  </div>,
+  <div>
+    <h3 className="text-lg font-semibold">在浏览模式下操纵画布</h3>
+    <p className="mt-2 text-sm text-muted-foreground">
+      处于 <View className="inline-block h-[1em] w-[1em] align-sub" /> <b>浏览模式</b> 时，你可以自由浏览
+    </p>
+    <p className="mt-2 text-sm text-muted-foreground">
+      <PointerOff className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>单击鼠标左键 或 触摸</b> 将不会绘制任何像素点
+      <br />
+      <Hand className="inline-block h-[1em] w-[1em] align-sub" />{" "}
+      <b>按下鼠标左键并拖动</b> 可以自由平移，不用担心破坏画笔
     </p>
   </div>,
   <div>
@@ -114,7 +134,7 @@ const content = [
   <div>
     <h3 className="text-lg font-semibold">一起创造 2025 的回忆！</h3>
     <p className="mt-2 text-sm text-muted-foreground">
-      我们将<b>在 2026/01/01 关闭 Paint2025</b>
+      我们将 <b>在 2026/01/01 关闭 Paint2025</b>
       ，届时将会用推文记录下大家的杰作。
     </p>
     <p className="mt-2 text-sm text-muted-foreground">

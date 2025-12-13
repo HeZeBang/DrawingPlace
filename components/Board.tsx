@@ -9,6 +9,8 @@ import {
   LogIn,
   LogOut,
   PaintBucket,
+  Brush,
+  View,
 } from "lucide-react";
 import Canvas from "./Canvas";
 import Dock from "./Dock";
@@ -22,6 +24,8 @@ import { useBackpack } from "@/lib/use-backpack";
 import { DrawRequestSchema } from "@/lib/schemas";
 import { useSettingsConfigContext } from "./SettingsProvider";
 import { ViewMode } from "@/lib/frontend-settings";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 let socket;
 
@@ -293,7 +297,7 @@ const Board = () => {
           smooth={false}
           wheel={{ step: ratio * 0.1, touchPadDisabled: false }}
           panning={{
-            allowLeftClickPan: false,
+            allowLeftClickPan: editable ? false : true,
             allowMiddleClickPan: true,
             allowRightClickPan: true,
           }} // Middle or Right click to pan
@@ -318,7 +322,7 @@ const Board = () => {
               />
               {settingsConfig.useOverlay && (
                 <div
-                  className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse ring-[0.1px] ring-black ring-offset-[0.1px]`}
+                  className={cn("h-[1px] w-[1px] pointer-events-none z-10 absolute ring-[0.1px] ring-black ring-offset-[0.1px]", editable ? "animate-pulse" : "opacity-50")}
                   style={{
                     left: location.x + 1,
                     top: location.y + 1,
@@ -345,17 +349,32 @@ const Board = () => {
             setShowGuideModal(false);
           }}
         />
+        <div className="absolute bottom-4 mx-auto flex gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
+            onClick={() => { setEditable((val) => !val) }}
+          >
+            {editable ?
+              <Brush className="h-4 w-4" /> :
+              <View className="h-4 w-4" />
+            }
+          </Button>
+        </div>
       </div>
 
       {/* Bottom Control Area */}
       <div className="bg-card border-t p-4 z-10 shrink-0">
         <div className="flex flex-col items-center gap-4">
-          <Dock
-            dataSource={colors}
-            onSelectColor={setSelectedColor}
-            selectedColor={selectedColor}
-            updateToken={setToken}
-          />
+          <div className={cn("transition-all ease-in-out duration-500 overflow-hidden", editable ? "max-h-32" : "max-h-0")}>
+            <Dock
+              dataSource={colors}
+              onSelectColor={setSelectedColor}
+              selectedColor={selectedColor}
+              updateToken={setToken}
+            />
+          </div>
           <div className="text-xs text-center flex flex-col">
             <span className="">{title}</span>
             <span className="text-muted-foreground">
