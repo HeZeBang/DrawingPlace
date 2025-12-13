@@ -122,7 +122,7 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
       }
       <Separator />
       {
-        Object.entries(StatusEntries).map(([key, { label, description, displayType, isHidden, mapFunction }]) => {
+        Object.entries(StatusEntries).map(([key, { label, description, isHidden, mapFunction }]) => {
           if (isHidden) return null;
           return (
             <div key={key} className="grid gap-1.5">
