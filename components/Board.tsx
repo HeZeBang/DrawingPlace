@@ -275,7 +275,7 @@ const Board = () => {
                 editable={pointsLeft > 0 && editable}
               />
               <div
-                className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse`}
+                className={`h-[1px] w-[1px] pointer-events-none z-10 absolute animate-pulse ring-[0.1px] ring-black ring-offset-[0.1px]`}
                 style={{
                   left: location.x + 1,
                   top: location.y + 1,
