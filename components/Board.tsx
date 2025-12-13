@@ -28,7 +28,7 @@ const Board = () => {
   const [points, setPoints] = useState([]);
   const [colors, setColors] = useState([]);
   const [delay, setDelay] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedColor, setSelectedColor] = useState("#000000");
 
   const [location, setLocation] = useState({ x: 0, y: 0 });
   const [ratio, setRatio] = useState(1);
