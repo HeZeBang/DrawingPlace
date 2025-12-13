@@ -119,7 +119,6 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
           }
         })
       }
-      <Button type="submit">保存更改</Button>
     </form>
   )
 }

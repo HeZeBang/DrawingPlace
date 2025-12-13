@@ -49,7 +49,7 @@ const Board = () => {
     config.DRAW_DELAY_MS,
   );
   const [token, setToken] = useState<string | null>(null);
-  const { config: settingsConfig } = useSettingsConfigContext();
+  const { config: settingsConfig, updateConfig: updateSettingsConfig } = useSettingsConfigContext();
   const [isConnected, setIsConnected] = useState(false);
   const [isValid, setIsValid] = useState(false);
   const isFetchingRef = useRef(false);
@@ -57,7 +57,7 @@ const Board = () => {
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
-    if (!localStorage.getItem("opened_guide_modal")) {
+    if (settingsConfig.showGuideOnLoad) {
       setShowGuideModal(true);
     }
     setToken(localStorage.getItem("draw_token") || "");
@@ -324,11 +324,11 @@ const Board = () => {
         <GuideModal
           isOpen={showGuideModal}
           onClickBtn={() => {
-            localStorage.setItem("opened_guide_modal", "true");
+            updateSettingsConfig({ showGuideOnLoad: false });
             setShowGuideModal(false);
           }}
           onClose={() => {
-            localStorage.setItem("opened_guide_modal", "true");
+            updateSettingsConfig({ showGuideOnLoad: false });
             setShowGuideModal(false);
           }}
         />
