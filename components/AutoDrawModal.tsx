@@ -36,10 +36,14 @@ const AutoDrawModal = ({
   handleDraw,
 }: {
   children: React.ReactNode;
-  handleDraw: (params: any) => Promise<{ success: boolean; nextRecoverIn?: number }>;
+  handleDraw: (
+    params: any,
+  ) => Promise<{ success: boolean; nextRecoverIn?: number }>;
 }) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [originalPictureUrl, setOriginalPictureUrl] = useState<string | null>(null);
+  const [originalPictureUrl, setOriginalPictureUrl] = useState<string | null>(
+    null,
+  );
   const { config: runtimeConfig } = useRuntimeConfigContext();
   const { config, updateConfig } = useSettingsConfigContext();
   const [startX, setStartX] = useState(0);
@@ -64,9 +68,16 @@ const AutoDrawModal = ({
       let currentPixels = pixels;
 
       // Load pixels if needed (or reload if data changed)
-      if ((currentPixels.length === 0 || config.progressAutoDraw === 0) && config.dataAutoDraw) {
+      if (
+        (currentPixels.length === 0 || config.progressAutoDraw === 0) &&
+        config.dataAutoDraw
+      ) {
         try {
-          currentPixels = await extractPixels(config.dataAutoDraw, config.xAutoDraw, config.yAutoDraw);
+          currentPixels = await extractPixels(
+            config.dataAutoDraw,
+            config.xAutoDraw,
+            config.yAutoDraw,
+          );
           setPixels(currentPixels);
         } catch (e) {
           console.error("Failed to extract pixels", e);
@@ -122,7 +133,12 @@ const AutoDrawModal = ({
     return () => {
       isCancelled = true;
     };
-  }, [config.startAutoDraw, config.dataAutoDraw, config.xAutoDraw, config.yAutoDraw]);
+  }, [
+    config.startAutoDraw,
+    config.dataAutoDraw,
+    config.xAutoDraw,
+    config.yAutoDraw,
+  ]);
 
   const handleStart = async () => {
     if (!originalPictureUrl) {
@@ -138,8 +154,15 @@ const AutoDrawModal = ({
     const endX = startX + img.width;
     const endY = startY + img.height;
 
-    if (startX < 0 || startY < 0 || endX > runtimeConfig.CANVAS_WIDTH || endY > runtimeConfig.CANVAS_HEIGHT) {
-      toast.error(`图片超出画布范围 (${runtimeConfig.CANVAS_WIDTH}x${runtimeConfig.CANVAS_HEIGHT})`);
+    if (
+      startX < 0 ||
+      startY < 0 ||
+      endX > runtimeConfig.CANVAS_WIDTH ||
+      endY > runtimeConfig.CANVAS_HEIGHT
+    ) {
+      toast.error(
+        `图片超出画布范围 (${runtimeConfig.CANVAS_WIDTH}x${runtimeConfig.CANVAS_HEIGHT})`,
+      );
       return;
     }
 
@@ -180,7 +203,9 @@ const AutoDrawModal = ({
           />
         </div>
       </div>
-      <Button className="w-full" onClick={handleStart}>开始绘图</Button>
+      <Button className="w-full" onClick={handleStart}>
+        开始绘图
+      </Button>
     </div>
   );
 
@@ -188,15 +213,17 @@ const AutoDrawModal = ({
     <div className="flex items-center gap-2">
       {isDesktop ? (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>{!config.startAutoDraw && children}</DialogTrigger>
+          <DialogTrigger asChild>
+            {!config.startAutoDraw && children}
+          </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>自动绘图</DialogTitle>
               <DialogDescription>
                 上传图片并指定起点，系统将自动绘制。（官方外挂）
-                <br/>
+                <br />
                 由于资源有限，官方自动绘图只支持小规模图片 + 单 Token 绘图。
-                <br/>
+                <br />
                 如需更多自定义，可以组队或自行编写脚本！
               </DialogDescription>
             </DialogHeader>
@@ -205,15 +232,17 @@ const AutoDrawModal = ({
         </Dialog>
       ) : (
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
-          <DrawerTrigger asChild>{!config.startAutoDraw && children}</DrawerTrigger>
+          <DrawerTrigger asChild>
+            {!config.startAutoDraw && children}
+          </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader className="text-left">
               <DrawerTitle>自动绘图</DrawerTitle>
               <DrawerDescription>
                 上传图片并指定起点，系统将自动绘制。（官方外挂）
-                <br/>
+                <br />
                 由于资源有限，官方自动绘图只支持小规模图片 + 单 Token 绘图。
-                <br/>
+                <br />
                 如需更多自定义，可以组队或自行编写脚本！
               </DrawerDescription>
             </DrawerHeader>
@@ -244,7 +273,20 @@ const AutoDrawModal = ({
                 title="停止自动绘图"
               >
                 <span className="sr-only">停止</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M9 9h6v6H9z" /></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                  <path d="M9 9h6v6H9z" />
+                </svg>
               </Button>
             </>
           ) : (
@@ -256,10 +298,11 @@ const AutoDrawModal = ({
               title="停止自动绘图"
             >
               <BotOff className="h-4 w-4 mr-2" />
-              <span>{config.progressAutoDraw || 0} / {pixels.length || 1}</span>
+              <span>
+                {config.progressAutoDraw || 0} / {pixels.length || 1}
+              </span>
             </Button>
           )}
-
         </div>
       )}
     </div>

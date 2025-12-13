@@ -43,7 +43,7 @@ const PixelCanvas = ({
       ctx.fillRect(0, 0, finalWidth, finalHeight);
 
       ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
-      
+
       const dataUrl = canvas.toDataURL("image/png");
       onPixelated(dataUrl);
     };
@@ -100,9 +100,10 @@ export default function InputPicture({
               "relative group border border-dashed flex items-center justify-center aspect-square rounded-md focus:outline-hidden cursor-pointer overflow-hidden transition-colors",
               {
                 "border-primary bg-secondary/50": isDragActive && isDragAccept,
-                "border-destructive bg-destructive/20": isDragActive && isDragReject,
+                "border-destructive bg-destructive/20":
+                  isDragActive && isDragReject,
                 "hover:bg-secondary/20": !originalFileUrl,
-              }
+              },
             )}
           >
             <input {...getInputProps()} id="sample" />
@@ -132,7 +133,9 @@ export default function InputPicture({
             ) : (
               <div className="flex flex-col items-center text-muted-foreground">
                 <ImageIcon className="h-16 w-16 mb-2" strokeWidth={1.25} />
-                <span className="text-xs min-w-fit">点击或将图片拖动到此处以上传</span>
+                <span className="text-xs min-w-fit">
+                  点击或将图片拖动到此处以上传
+                </span>
               </div>
             )}
           </div>
@@ -152,7 +155,9 @@ export default function InputPicture({
           </div>
 
           <div className="flex items-center gap-4 max-w-full">
-            <span className="text-xs min-w-fit text-muted-foreground">粗糙</span>
+            <span className="text-xs min-w-fit text-muted-foreground">
+              粗糙
+            </span>
             <input
               type="range"
               min="8"
@@ -162,7 +167,9 @@ export default function InputPicture({
               onChange={(e) => setPixelSize(Number(e.target.value))}
               className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80 min-w-8"
             />
-            <span className="text-xs min-w-fit text-muted-foreground">精细</span>
+            <span className="text-xs min-w-fit text-muted-foreground">
+              精细
+            </span>
           </div>
           <p className="text-[10px] text-muted-foreground">
             * 无论原图横竖，其最长边将被压缩至 {pixelSize} 像素。

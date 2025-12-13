@@ -1,6 +1,6 @@
 {
   "name": "drawing-place-next",
-  "version": "2.1.2",
+  "version": "2.2.0-beta1",
   "private": true,
   "packageManager": "pnpm@10.25.0",
   "scripts": {

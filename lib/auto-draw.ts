@@ -1,4 +1,3 @@
-
 export interface AutoDrawPixel {
   x: number;
   y: number;
@@ -10,7 +9,7 @@ export interface AutoDrawPixel {
 export const extractPixels = (
   dataUrl: string,
   startX: number,
-  startY: number
+  startY: number,
 ): Promise<AutoDrawPixel[]> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -35,10 +34,9 @@ export const extractPixels = (
           const g = imageData.data[index + 1];
           const b = imageData.data[index + 2];
           // Alpha is ignored as we expect opaque image or treat as opaque
-          
+
           const hex =
-            "#" +
-            ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 
           pixels.push({
             x: startX + x,

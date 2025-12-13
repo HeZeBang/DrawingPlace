@@ -244,7 +244,6 @@ const Board = () => {
     ],
   );
 
-
   const handleAutoDraw = useCallback(
     (params): Promise<{ success: boolean; nextRecoverIn?: number }> => {
       return new Promise((resolve) => {
