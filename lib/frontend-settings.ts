@@ -31,12 +31,19 @@ export const defaultSettingsConfig: SettingsConfig = {
 
 // Frontend status interface and entries
 
+export enum ViewMode {
+  MapOnly = 0,
+  CanvasOnly = 1,
+  Mix = 2,
+}
+
 export interface FrontendStatus {
   isLoading: boolean;
   isConnected: boolean;
   isTokenValid: boolean;
   isLoggedIn: boolean;
   onlineClients: number;
+  currentViewMode: ViewMode;
   // totalActions: number;
   // totalUsers: number;
 }
@@ -47,6 +54,7 @@ export const defaultFrontendStatus: FrontendStatus = {
   isTokenValid: false,
   isLoggedIn: false,
   onlineClients: 0,
+  currentViewMode: ViewMode.Mix,
   // totalActions: 0,
   // totalUsers: 0,
 };
@@ -92,4 +100,9 @@ export const StatusEntries: Record<keyof FrontendStatus, StatusEntry> = {
   //   label: "总用户数",
   //   // description: "自应用启动以来的独立用户总数",
   // },
+  currentViewMode: {
+    label: "当前视图模式",
+    // description: "应用当前的视图显示模式",
+    isHidden: true,
+  }
 };

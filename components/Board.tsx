@@ -21,6 +21,7 @@ import GuideModal from "./GuideModal";
 import { useBackpack } from "@/lib/use-backpack";
 import { DrawRequestSchema } from "@/lib/schemas";
 import { useSettingsConfigContext } from "./SettingsProvider";
+import { ViewMode } from "@/lib/frontend-settings";
 
 let socket;
 
@@ -303,7 +304,7 @@ const Board = () => {
             <div
               className="bg-background shadow-2xl border border-border"
               style={{
-                backgroundImage: `url(/map.png)`,
+                backgroundImage: statusConfig.currentViewMode !== ViewMode.CanvasOnly ? `url(/map.png)` : undefined,
                 imageRendering: ratio > 1 ? "pixelated" : "auto",
               }}
             >
@@ -313,6 +314,7 @@ const Board = () => {
                 onMove={handleMove}
                 onDraw={handleDraw}
                 editable={pointsLeft > 0 && editable}
+                opacity={statusConfig.currentViewMode !== ViewMode.MapOnly ? "1" : "0"}
               />
               {settingsConfig.useOverlay && (
                 <div

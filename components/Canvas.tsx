@@ -2,7 +2,7 @@
 import { useRef, useEffect } from "react";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 
-const Canvas = ({ dataSource, color, onMove, onDraw, editable }) => {
+const Canvas = ({ dataSource, color, onMove, onDraw, editable, opacity }) => {
   const canvasRef = useRef(null);
 
   const { config } = useRuntimeConfigContext();
@@ -84,6 +84,7 @@ const Canvas = ({ dataSource, color, onMove, onDraw, editable }) => {
         width: size.width + "px",
         height: size.height + "px",
         imageRendering: "pixelated", // Ensure crisp edges when zoomed
+        opacity: opacity,
       }}
     />
   );
