@@ -482,7 +482,7 @@ const Board = () => {
                   style={{
                     left: location.x + 1,
                     top: location.y + 1,
-                    backgroundColor: selectedColor || "transparent",
+                    backgroundColor: (editable && selectedColor) || "transparent",
                   }}
                 />
               )}
@@ -538,7 +538,7 @@ const Board = () => {
           <div
             className={cn(
               "transition-all ease-in-out duration-500 overflow-hidden",
-              editable ? "max-h-32" : "max-h-0",
+              editable ? "max-h-60" : "max-h-0",
             )}
           >
             <Dock
