@@ -135,7 +135,7 @@ const Board = () => {
       console.log("Connected to socket", {
         socketId: newSocket.id,
         connected: newSocket.connected,
-        transport: newSocket.io.engine.transport.name
+        transport: newSocket.io.engine.transport.name,
       });
       toast.success("已连接到服务器");
       updateStatusConfig({ isConnected: true });
@@ -145,13 +145,13 @@ const Board = () => {
     newSocket.on("authenticated", (data) => {
       console.log("Authenticated with token", data);
       updateStatusConfig({ isTokenValid: true });
-      
+
       // 同步服务器返回的 points 和 lastUpdate
       if (data.pointsLeft !== undefined && data.lastUpdate !== undefined) {
         syncFromServer(data.pointsLeft, data.lastUpdate);
         console.log("Synced points on authentication", {
           pointsLeft: data.pointsLeft,
-          lastUpdate: data.lastUpdate
+          lastUpdate: data.lastUpdate,
         });
       }
     });
@@ -159,7 +159,7 @@ const Board = () => {
     newSocket.on("connect_error", (err) => {
       console.error("Connection error:", {
         message: err.message,
-        socketId: newSocket.id
+        socketId: newSocket.id,
       });
       updateStatusConfig({ isConnected: false, isTokenValid: false });
     });
@@ -229,7 +229,7 @@ const Board = () => {
           console.warn("Socket not connected", {
             connected: socketRef.current?.connected,
             socketId: socketRef.current?.id,
-            readyState: socketRef.current?.io.engine.readyState
+            readyState: socketRef.current?.io.engine.readyState,
           });
           toast.error("未连接到服务器，正在重连...");
           resolve({ success: false, nextRecoverIn });
@@ -254,14 +254,17 @@ const Board = () => {
           console.log("Draw response received", {
             code: result.code,
             message: result.message,
-            pointsLeft: result.pointsLeft
+            pointsLeft: result.pointsLeft,
           });
-          
+
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and sync from server
             setPoints((prev) => [...prev, params]);
             // Always sync from server to avoid conflicts
-            if (result.pointsLeft !== undefined && result.lastUpdate !== undefined) {
+            if (
+              result.pointsLeft !== undefined &&
+              result.lastUpdate !== undefined
+            ) {
               syncFromServer(result.pointsLeft, result.lastUpdate);
             }
             resolve({ success: true });
@@ -312,7 +315,7 @@ const Board = () => {
         if (!socketRef.current || !socketRef.current.connected) {
           console.warn("Socket not connected during AutoDraw", {
             connected: socketRef.current?.connected,
-            socketId: socketRef.current?.id
+            socketId: socketRef.current?.id,
           });
           resolve({ success: false, nextRecoverIn: 1000 });
           return;
@@ -335,14 +338,17 @@ const Board = () => {
           console.log("AutoDraw response received", {
             code: result.code,
             message: result.message,
-            pointsLeft: result.pointsLeft
+            pointsLeft: result.pointsLeft,
           });
-          
+
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and sync from server
             setPoints((prev) => [...prev, params]);
             // Always sync from server to avoid conflicts
-            if (result.pointsLeft !== undefined && result.lastUpdate !== undefined) {
+            if (
+              result.pointsLeft !== undefined &&
+              result.lastUpdate !== undefined
+            ) {
               syncFromServer(result.pointsLeft, result.lastUpdate);
             }
             resolve({ success: true });
