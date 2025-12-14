@@ -58,9 +58,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Inject environment variables at runtime to .env file and start the server
-CMD echo "MONGO_URI=${MONGO_URI:-mongodb://mongo/place}" > .env && \
-    echo "DRAW_DELAY_MS=${DRAW_DELAY_MS:-5000}" >> .env && \
-    echo "CANVAS_WIDTH=${CANVAS_WIDTH:-1000}" >> .env && \
-    echo "CANVAS_HEIGHT=${CANVAS_HEIGHT:-1000}" >> .env && \
-    exec node_modules/.bin/ts-node --project tsconfig.server.json server.ts
+# Start the server
+CMD exec node_modules/.bin/ts-node --project tsconfig.server.json server.ts

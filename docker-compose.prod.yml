@@ -10,6 +10,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MONGO_URI=mongodb://mongo:27017/place
+      - REDIS_URI=redis://redis:6379
       - META_TITLE=${META_TITLE:-Drawing Place}
       - META_DESCRIPTION=${META_DESCRIPTION:-A collaborative drawing board.}
       - DRAW_DELAY_MS=${DRAW_DELAY_MS:-5000}

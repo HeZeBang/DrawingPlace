@@ -82,6 +82,34 @@ async function createAction(params: any) {
 // Global state for statistics
 // let onlineClientsCount = 0;
 
+async function connectRedis(retries = 5, delay = 2000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`Connecting to Redis at ${serverConfig.REDIS_URI || "redis://redis:6379"} for Socket.io adapter... (attempt ${i + 1}/${retries})`);
+      const pubClient = createClient({ 
+        url: serverConfig.REDIS_URI || "redis://redis:6379",
+        socket: {
+          reconnectStrategy: (retries) => Math.min(retries * 50, 500),
+          connectTimeout: 10000,
+        }
+      });
+      const subClient = pubClient.duplicate();
+      const redisClient = pubClient.duplicate();
+
+      await Promise.all([pubClient.connect(), subClient.connect(), redisClient.connect()]);
+      console.log("✓ Connected to Redis for Socket.io adapter");
+      return { pubClient, subClient, redisClient };
+    } catch (error) {
+      console.error(`✗ Redis connection failed (attempt ${i + 1}/${retries}):`, error instanceof Error ? error.message : error);
+      if (i < retries - 1) {
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw new Error("Failed to connect to Redis after multiple retries");
+}
+
 app.prepare().then(async () => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
@@ -90,13 +118,15 @@ app.prepare().then(async () => {
 
   const io = new Server(server);
 
-  const pubClient = createClient({ url: serverConfig.REDIS_URI || "redis://localhost:6379" });
-  const subClient = pubClient.duplicate();
-  const redisClient = pubClient.duplicate();
-
-  await Promise.all([pubClient.connect(), subClient.connect(), redisClient.connect()]);
-
-  io.adapter(createAdapter(pubClient, subClient));
+  let pubClient, subClient, redisClient;
+  try {
+    ({ pubClient, subClient, redisClient } = await connectRedis());
+    io.adapter(createAdapter(pubClient, subClient));
+  } catch (error) {
+    console.error("Failed to initialize Redis adapter:", error);
+    console.warn("Redis adapter not available. Socket.IO will use in-memory adapter (single-server only)");
+    // Continue without Redis adapter - will work but only on single server
+  }
 
   // Rate limiting map
   // const lastPointUpdates = new Map<string, number>();
@@ -107,8 +137,17 @@ app.prepare().then(async () => {
     const token = socket.handshake.auth.token;
     if (token) {
       try {
-        // Try Redis cache first
-        const cachedUserId = await redisClient.get(`draw:token:${token}`);
+        let cachedUserId: string | null = null;
+        
+        // Try Redis cache first (if available)
+        if (redisClient) {
+          try {
+            cachedUserId = await redisClient.get(`draw:token:${token}`);
+          } catch (error) {
+            console.error("Redis cache lookup failed:", error);
+          }
+        }
+        
         if (cachedUserId) {
           socket.data.token = token;
           socket.data.userId = cachedUserId;
@@ -118,8 +157,14 @@ app.prepare().then(async () => {
           if (session) {
             socket.data.token = token;
             socket.data.userId = session.userId;
-            // Cache in Redis for 24 hours
-            await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
+            // Cache in Redis for 24 hours (if available)
+            if (redisClient) {
+              try {
+                await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
+              } catch (error) {
+                console.error("Failed to cache token in Redis:", error);
+              }
+            }
           }
         }
       } catch (e) {
@@ -134,10 +179,16 @@ app.prepare().then(async () => {
   io.on("connection", async (socket) => {
     console.log("Client connected");
 
-    // Increment connected clients count
-    const onlineClientsCount = await redisClient.incr("draw:online_count");
-    console.log(`Connected clients: ${onlineClientsCount}`);
-    io.emit("onlineClientsUpdated", { count: onlineClientsCount });
+    // Increment connected clients count (only if Redis is available)
+    if (redisClient) {
+      try {
+        const onlineClientsCount = await redisClient.incr("draw:online_count");
+        console.log(`Connected clients: ${onlineClientsCount}`);
+        io.emit("onlineClientsUpdated", { count: onlineClientsCount });
+      } catch (error) {
+        console.error("Failed to update online count:", error);
+      }
+    }
 
     // set token to roomId
     const roomId = socket.data.token;
@@ -174,8 +225,17 @@ app.prepare().then(async () => {
       let user: { id: string; token: string } | null = null;
       if (token) {
         try {
-          // Try Redis cache first
-          const cachedUserId = await redisClient.get(`draw:token:${token}`);
+          let cachedUserId: string | null = null;
+          
+          // Try Redis cache first (if available)
+          if (redisClient) {
+            try {
+              cachedUserId = await redisClient.get(`draw:token:${token}`);
+            } catch (error) {
+              console.error("Redis cache lookup failed:", error);
+            }
+          }
+          
           if (cachedUserId) {
             user = { id: cachedUserId.toString(), token: token };
           } else {
@@ -183,8 +243,14 @@ app.prepare().then(async () => {
             const session = await UserSession.findOne({ token });
             if (session) {
               user = { id: session.userId, token: token };
-              // Cache in Redis for 24 hours
-              await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
+              // Cache in Redis for 24 hours (if available)
+              if (redisClient) {
+                try {
+                  await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
+                } catch (error) {
+                  console.error("Failed to cache token in Redis:", error);
+                }
+              }
             }
           }
           
@@ -228,11 +294,21 @@ app.prepare().then(async () => {
         : 24;
       const now = Date.now();
 
-      const lastPointUpdateStr = await redisClient.get(`draw:user:${user.id}:last_update`);
-      const lastPointUpdate = lastPointUpdateStr ? parseInt(lastPointUpdateStr.toString()) : now;
+      let lastPointUpdate = now;
+      let lastPoint = maxPoints;
 
-      const lastPointStr = await redisClient.get(`draw:user:${user.id}:points`);
-      const lastPoint = lastPointStr ? parseInt(lastPointStr.toString()) : maxPoints;
+      // Try to get from Redis cache (if available)
+      if (redisClient) {
+        try {
+          const lastPointUpdateStr = await redisClient.get(`draw:user:${user.id}:last_update`);
+          const lastPointStr = await redisClient.get(`draw:user:${user.id}:points`);
+          
+          if (lastPointUpdateStr) lastPointUpdate = parseInt(lastPointUpdateStr.toString());
+          if (lastPointStr) lastPoint = parseInt(lastPointStr.toString());
+        } catch (error) {
+          console.error("Failed to get rate limit from Redis:", error);
+        }
+      }
 
       let timePassed = now - lastPointUpdate;
       const delay = serverConfig.DRAW_DELAY_MS
@@ -263,8 +339,15 @@ app.prepare().then(async () => {
         if (rawCurrentPoints < maxPoints) {
           newUpdatedAt = now - (timePassed % delay);
         }
-        await redisClient.set(`draw:user:${user.id}:points`, currentPoints.toString());
-        await redisClient.set(`draw:user:${user.id}:last_update`, newUpdatedAt.toString());
+        // Update Redis (if available)
+        if (redisClient) {
+          try {
+            await redisClient.set(`draw:user:${user.id}:points`, currentPoints.toString());
+            await redisClient.set(`draw:user:${user.id}:last_update`, newUpdatedAt.toString());
+          } catch (error) {
+            console.error("Failed to update rate limit in Redis:", error);
+          }
+        }
       }
 
       // Broadcast to others(including self)
@@ -301,10 +384,16 @@ app.prepare().then(async () => {
     socket.on("disconnect", async () => {
       console.log("Client disconnected");
 
-      // Decrement connected clients count
-      const onlineClientsCount = await redisClient.decr("draw:online_count");
-      console.log(`Connected clients: ${onlineClientsCount}`);
-      io.emit("onlineClientsUpdated", { count: onlineClientsCount });
+      // Decrement connected clients count (only if Redis is available)
+      if (redisClient) {
+        try {
+          const onlineClientsCount = await redisClient.decr("draw:online_count");
+          console.log(`Connected clients: ${onlineClientsCount}`);
+          io.emit("onlineClientsUpdated", { count: onlineClientsCount });
+        } catch (error) {
+          console.error("Failed to update online count:", error);
+        }
+      }
     });
   });
 

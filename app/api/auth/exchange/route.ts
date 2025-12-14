@@ -122,13 +122,19 @@ export async function POST(request: Request) {
 
     // Cache token in Redis for 24 hours for faster lookup across replicas
     try {
-      const redisClient = createClient({ url: process.env.REDIS_URI || "redis://localhost:6379" });
+      const redisClient = createClient({ 
+        url: process.env.REDIS_URI || "redis://localhost:6379",
+        socket: {
+          connectTimeout: 5000,
+          reconnectStrategy: (retries) => Math.min(retries * 50, 500),
+        }
+      });
       await redisClient.connect();
       await redisClient.setEx(`draw:token:${drawToken}`, 86400, userId);
       await redisClient.quit();
     } catch (e) {
-      console.warn("Failed to cache token in Redis:", e);
-      // Continue anyway - MongoDB will be the fallback
+      console.warn("⚠️  Failed to cache token in Redis (non-blocking):", e instanceof Error ? e.message : e);
+      // Continue anyway - MongoDB will be the fallback, no need to fail the request
     }
 
     console.log(`Generated new token for user ${userId}: ${drawToken}`);

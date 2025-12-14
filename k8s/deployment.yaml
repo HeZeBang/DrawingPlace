@@ -11,9 +11,9 @@ metadata:
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  MONGO_URI: "mongodb://mongo:27017/place"
-  MONGO_URI_CLIENT: "mongodb://mongo:27017/place"
-  REDIS_URI: "redis://redis:6379"
+  MONGO_URI: "mongodb://mongo.drawing-place.svc.cluster.local:27017/place"
+  MONGO_URI_CLIENT: "mongodb://mongo.drawing-place.svc.cluster.local:27017/place"
+  REDIS_URI: "redis://redis.drawing-place.svc.cluster.local:6379"
   DRAW_DELAY_MS: "5000"
   DRAW_MAX_POINTS: "24"
   CANVAS_WIDTH: "1534"
@@ -101,6 +101,25 @@ spec:
           image: redis:7.0
           ports:
             - containerPort: 6379
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -130,6 +149,13 @@ spec:
       labels:
         app: drawing-place
     spec:
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z redis.drawing-place.svc.cluster.local 6379; do echo waiting for redis; sleep 2; done']
+        - name: wait-for-mongo
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z mongo.drawing-place.svc.cluster.local 27017; do echo waiting for mongo; sleep 2; done']
       containers:
         - name: drawing-place
           image: ghcr.io/hezebang/drawingplace:latest
@@ -142,14 +168,23 @@ spec:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 30
             periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service
