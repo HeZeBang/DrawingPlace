@@ -249,9 +249,12 @@ const Board = () => {
           });
           
           if (result.code === AppErrorCode.Success) {
-            // Success: Add point and start delay
+            // Success: Add point and sync from server
             setPoints((prev) => [...prev, params]);
-            consumePoint();
+            // Always sync from server to avoid conflicts
+            if (result.pointsLeft !== undefined && result.lastUpdate !== undefined) {
+              syncFromServer(result.pointsLeft, result.lastUpdate);
+            }
             resolve({ success: true });
           } else if (result.code === AppErrorCode.InsufficientPoints) {
             // Handle rate limit countdown
@@ -322,13 +325,17 @@ const Board = () => {
         socketRef.current.emit("draw", payload, (result: AppError) => {
           console.log("AutoDraw response received", {
             code: result.code,
-            message: result.message
+            message: result.message,
+            pointsLeft: result.pointsLeft
           });
           
           if (result.code === AppErrorCode.Success) {
-            // Success: Add point and start delay
+            // Success: Add point and sync from server
             setPoints((prev) => [...prev, params]);
-            consumePoint();
+            // Always sync from server to avoid conflicts
+            if (result.pointsLeft !== undefined && result.lastUpdate !== undefined) {
+              syncFromServer(result.pointsLeft, result.lastUpdate);
+            }
             resolve({ success: true });
           } else if (result.code === AppErrorCode.InsufficientPoints) {
             // Handle rate limit countdown
