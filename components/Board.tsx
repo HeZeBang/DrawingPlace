@@ -142,9 +142,18 @@ const Board = () => {
       fetchData();
     });
 
-    newSocket.on("authenticated", () => {
-      console.log("Authenticated with token");
+    newSocket.on("authenticated", (data) => {
+      console.log("Authenticated with token", data);
       updateStatusConfig({ isTokenValid: true });
+      
+      // 同步服务器返回的 points 和 lastUpdate
+      if (data.pointsLeft !== undefined && data.lastUpdate !== undefined) {
+        syncFromServer(data.pointsLeft, data.lastUpdate);
+        console.log("Synced points on authentication", {
+          pointsLeft: data.pointsLeft,
+          lastUpdate: data.lastUpdate
+        });
+      }
     });
 
     newSocket.on("connect_error", (err) => {

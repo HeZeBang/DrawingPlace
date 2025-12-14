@@ -260,7 +260,33 @@ app.prepare().then(async () => {
     if (roomId) {
       socket.join(roomId);
       console.log(`Socket joined room: ${roomId}`);
-      socket.emit("authenticated", { success: true });
+      
+      // 获取当前用户的 points 和 lastUpdate
+      const userId = socket.data.userId;
+      let currentPoints = serverConfig.DRAW_MAX_POINTS ? parseInt(serverConfig.DRAW_MAX_POINTS) : 24;
+      let lastUpdate = Date.now();
+      
+      if (userId && redisClient) {
+        try {
+          const pointsStr = await redisClient.get(`draw:user:${userId}:points`);
+          const timeStr = await redisClient.get(`draw:user:${userId}:last_update`);
+          
+          if (pointsStr !== null) {
+            currentPoints = parseInt(pointsStr);
+          }
+          if (timeStr !== null) {
+            lastUpdate = parseInt(timeStr);
+          }
+        } catch (error) {
+          console.error("Failed to get user points on connect:", error);
+        }
+      }
+      
+      socket.emit("authenticated", { 
+        success: true, 
+        pointsLeft: currentPoints, 
+        lastUpdate: lastUpdate 
+      });
     } else {
       console.warn("Client connected without token");
       socket.emit("authenticated", { success: false, message: "No token provided" });
