@@ -132,17 +132,33 @@ app.prepare().then(async () => {
     handle(req, res, parsedUrl);
   });
 
-  const io = new Server(server);
+  const io = new Server(server, {
+    transports: ['websocket', 'polling'],
+    cors: {
+      origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+      methods: ['GET', 'POST']
+    }
+  });
 
   let pubClient, subClient, redisClient;
   try {
     ({ pubClient, subClient, redisClient } = await connectRedis());
     io.adapter(createAdapter(pubClient, subClient));
+    console.log("Redis adapter initialized successfully");
   } catch (error) {
     console.error("Failed to initialize Redis adapter:", error);
     console.warn("Redis adapter not available. Socket.IO will use in-memory adapter (single-server only)");
     // Continue without Redis adapter - will work but only on single server
   }
+
+  io.use((socket, next) => {
+    console.log("Middleware check", {
+      socketId: socket.id,
+      remoteAddress: socket.conn.remoteAddress,
+      transport: socket.conn.transport.name
+    });
+    next();
+  });
 
   // Rate limiting map
   // const lastPointUpdates = new Map<string, number>();
@@ -193,7 +209,11 @@ app.prepare().then(async () => {
   });
 
   io.on("connection", async (socket) => {
-    console.log("Client connected");
+    console.log("Client connected", {
+      socketId: socket.id,
+      userId: socket.data.userId,
+      token: socket.data.token ? "present" : "missing"
+    });
 
     // Increment connected clients count (only if Redis is available)
     if (redisClient) {
@@ -212,9 +232,19 @@ app.prepare().then(async () => {
       socket.join(roomId);
       console.log(`Socket joined room: ${roomId}`);
       socket.emit("authenticated", { success: true });
+    } else {
+      console.warn("Client connected without token");
+      socket.emit("authenticated", { success: false, message: "No token provided" });
     }
 
     socket.on("draw", async (params, cb: (result: AppError) => void) => {
+      console.log("Draw event received", {
+        socketId: socket.id,
+        userId: socket.data.userId,
+        hasCallback: !!cb,
+        paramsKeys: Object.keys(params || {})
+      });
+
       const parseResult = DrawRequestSchema.safeParse(params);
       if (!parseResult.success) {
         console.error("Error while parsing: ", parseResult.error);

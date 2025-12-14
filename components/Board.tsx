@@ -123,24 +123,33 @@ const Board = () => {
     });
 
     socket.on("connect", () => {
-      console.log("Connected to socket");
+      console.log("Connected to socket", {
+        socketId: socket.id,
+        connected: socket.connected,
+        transport: socket.io.engine.transport.name
+      });
       toast.success("已连接到服务器");
       updateStatusConfig({ isConnected: true });
       fetchData();
     });
 
     socket.on("authenticated", () => {
-      console.log("Authenticated");
+      console.log("Authenticated with token");
       updateStatusConfig({ isTokenValid: true });
     });
 
     socket.on("connect_error", (err) => {
-      console.error("Connection error:", err);
+      console.error("Connection error:", {
+        message: err.message,
+        code: err.code,
+        type: err.type,
+        socketId: socket.id
+      });
       updateStatusConfig({ isConnected: false, isTokenValid: false });
     });
 
-    socket.on("disconnect", () => {
-      console.log("Disconnected from socket");
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from socket", { reason });
       toast.error("与服务器的连接已断开");
       updateStatusConfig({ isConnected: false });
     });
@@ -195,6 +204,18 @@ const Board = () => {
           return;
         }
 
+        // 检查连接状态
+        if (!socket.connected) {
+          console.warn("Socket not connected", {
+            connected: socket.connected,
+            socketId: socket.id,
+            readyState: socket.io.engine.readyState
+          });
+          toast.error("未连接到服务器，正在重连...");
+          resolve({ success: false, nextRecoverIn });
+          return;
+        }
+
         const payload = {
           token: token,
           data: params,
@@ -210,6 +231,12 @@ const Board = () => {
 
         // Emit to server with token and handle response
         socket.emit("draw", payload, (result: AppError) => {
+          console.log("Draw response received", {
+            code: result.code,
+            message: result.message,
+            pointsLeft: result.pointsLeft
+          });
+          
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and start delay
             setPoints((prev) => [...prev, params]);
@@ -258,6 +285,16 @@ const Board = () => {
           return;
         }
 
+        // 检查连接状态
+        if (!socket.connected) {
+          console.warn("Socket not connected during AutoDraw", {
+            connected: socket.connected,
+            socketId: socket.id
+          });
+          resolve({ success: false, nextRecoverIn: 1000 });
+          return;
+        }
+
         const payload = {
           token: token,
           data: params,
@@ -272,6 +309,11 @@ const Board = () => {
 
         // Emit to server with token and handle response
         socket.emit("draw", payload, (result: AppError) => {
+          console.log("AutoDraw response received", {
+            code: result.code,
+            message: result.message
+          });
+          
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and start delay
             setPoints((prev) => [...prev, params]);

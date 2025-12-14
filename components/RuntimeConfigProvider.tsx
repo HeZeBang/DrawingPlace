@@ -19,10 +19,10 @@ export function RuntimeConfigProvider({
   const prevConfig = useRef<RuntimeConfig | null>(null);
 
   if (!initialized.current || prevConfig.current !== config) {
-    console.log("Initializing runtime config from server props:", {
-      serverUrl: config.CASDOOR_SERVER_URL,
-      clientId: config.CASDOOR_CLIENT_ID ? "[SET]" : "[EMPTY]",
-    });
+    // console.log("Initializing runtime config from server props:", {
+    //   serverUrl: config.CASDOOR_SERVER_URL,
+    //   clientId: config.CASDOOR_CLIENT_ID ? "[SET]" : "[EMPTY]",
+    // });
     setRuntimeConfig(config);
     reinitializeCasdoorSdk();
     initialized.current = true;
