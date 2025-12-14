@@ -82,21 +82,37 @@ async function createAction(params: any) {
 // Global state for statistics
 // let onlineClientsCount = 0;
 
-async function connectRedis(retries = 5, delay = 2000) {
+async function connectRedis(retries = 5, delay = 1000) {
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`Connecting to Redis at ${serverConfig.REDIS_URI || "redis://redis:6379"} for Socket.io adapter... (attempt ${i + 1}/${retries})`);
-      const pubClient = createClient({ 
+      const pubClient = createClient({
         url: serverConfig.REDIS_URI || "redis://redis:6379",
         socket: {
           reconnectStrategy: (retries) => Math.min(retries * 50, 500),
-          connectTimeout: 10000,
+          connectTimeout: 5000,
         }
       });
-      const subClient = pubClient.duplicate();
-      const redisClient = pubClient.duplicate();
 
-      await Promise.all([pubClient.connect(), subClient.connect(), redisClient.connect()]);
+      // Create sub client separately
+      const subClient = createClient({
+        url: serverConfig.REDIS_URI || "redis://redis:6379",
+        socket: {
+          reconnectStrategy: (retries) => Math.min(retries * 50, 500),
+          connectTimeout: 5000,
+        }
+      });
+      
+      // Use pubClient as redisClient instead of duplicate
+      const redisClient = pubClient;
+
+      // Connect in sequence, not in parallel, to avoid connection pool issues
+      await pubClient.connect();
+      console.log("✓ pubClient connected");
+      
+      await subClient.connect();
+      console.log("✓ subClient connected");
+      
       console.log("✓ Connected to Redis for Socket.io adapter");
       return { pubClient, subClient, redisClient };
     } catch (error) {
