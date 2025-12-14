@@ -29,7 +29,6 @@ const dev = serverConfig.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// 🟢 修复 1: 引入 Lua 脚本，保证 Rate Limit 的“读-算-写”是原子操作，防止并发刷分
 const RATE_LIMIT_SCRIPT = `
   local pointsKey = KEYS[1]
   local timeKey = KEYS[2]
@@ -41,7 +40,6 @@ const RATE_LIMIT_SCRIPT = `
   local lastUpdate = tonumber(redis.call('get', timeKey) or now)
   local currentPoints = tonumber(redis.call('get', pointsKey) or maxPoints)
 
-  -- 计算随时间恢复的点数
   local timePassed = now - lastUpdate
   local recovered = math.floor(timePassed / delay)
   currentPoints = math.min(maxPoints, currentPoints + recovered)
@@ -55,9 +53,9 @@ const RATE_LIMIT_SCRIPT = `
       currentPoints = currentPoints - cost
       redis.call('set', pointsKey, currentPoints)
       redis.call('set', timeKey, newUpdate)
-      return {currentPoints, newUpdate, 1} -- 1 表示成功
+      return {currentPoints, newUpdate, 1}
   else
-      return {currentPoints, newUpdate, 0} -- 0 表示失败
+      return {currentPoints, newUpdate, 0}
   end
 `;
 
@@ -73,8 +71,6 @@ dbConnect()
 async function savePoint(params: any) {
   const { x, y, w, h, c, user } = params;
   try {
-    // 🟢 修复 2: 使用 findOneAndUpdate (Upsert) 替代 find + save
-    // 减少一次数据库IO，并避免并发写入冲突
     await Point.findOneAndUpdate(
       { x, y },
       {
@@ -131,7 +127,6 @@ async function connectRedis(retries = 5, delay = 1000) {
 
       const redisClient = pubClient;
 
-      // 顺序连接，避免连接池竞争
       await pubClient.connect();
       console.log("✓ pubClient connected");
 
@@ -158,7 +153,6 @@ app.prepare().then(async () => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
 
-    // 🟢 修复 3: 显式拦截 socket.io 请求，防止 Next.js 路由处理导致的干扰
     if (parsedUrl.pathname?.startsWith("/socket.io/")) {
       return;
     }
@@ -167,8 +161,6 @@ app.prepare().then(async () => {
   });
 
   const io = new Server(server, {
-    // 🟢 修复 4: 强制只使用 WebSocket，跳过 Polling
-    // 彻底解决 Docker/Mac 环境下 400 Session ID Unknown 问题
     transports: ["websocket"],
     cors: {
       origin: process.env.ALLOWED_ORIGINS
@@ -177,6 +169,7 @@ app.prepare().then(async () => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    maxHttpBufferSize: 16 * 1024, // Max 16KB per message,
   });
 
   let pubClient, subClient, redisClient;
@@ -205,7 +198,6 @@ app.prepare().then(async () => {
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
 
-    // 🟢 修复 5: 严格校验空字符串，防止 falsy 值导致的逻辑穿透
     if (token && typeof token === "string" && token.trim().length > 0) {
       try {
         let cachedUserId: string | null = null;
@@ -261,8 +253,6 @@ app.prepare().then(async () => {
       token: socket.data.token ? "present" : "missing",
     });
 
-    // 🟢 修复 6: 使用 Redis Set 替代 INCR/DECR
-    // 即使服务崩溃重启，也不会导致在线人数永久虚高
     if (redisClient) {
       try {
         await redisClient.sAdd("draw:online_users", socket.id);
@@ -361,7 +351,6 @@ app.prepare().then(async () => {
         return;
       }
 
-      // 🟢 修复 8: 执行 Lua 脚本进行原子限流检查
       const maxPoints = serverConfig.DRAW_MAX_POINTS
         ? parseInt(serverConfig.DRAW_MAX_POINTS)
         : 24;
@@ -397,11 +386,10 @@ app.prepare().then(async () => {
         } catch (error) {
           console.error("Failed to execute rate limit script:", error);
           // 如果 Redis 挂了，暂时允许绘制（Fail Open），或者选择拒绝（Fail Closed）
-          // 这里选择允许，避免服务完全不可用
-          isSuccess = true;
+          isSuccess = false;
         }
       } else {
-        // 没有 Redis 时的内存 Fallback (简单处理，开发环境用)
+        // 没有 Redis 时的内存 Fallback
         isSuccess = true;
       }
 
@@ -416,10 +404,8 @@ app.prepare().then(async () => {
         return;
       }
 
-      // 广播给其他人
       socket.broadcast.emit("draw", data);
 
-      // 同步给自己 (前端通常需要这个来修正本地状态)
       socket.emit("sync", {
         pointsLeft: currentPoints,
         lastUpdate: newUpdatedAt,
@@ -433,7 +419,6 @@ app.prepare().then(async () => {
           lastUpdate: newUpdatedAt,
         });
 
-      // 异步写入数据库 (Fire and Forget)
       const username = userId;
       createAction({ point: data, user: username });
       savePoint({ ...data, user: username });
@@ -457,7 +442,6 @@ app.prepare().then(async () => {
 
   const port = parseInt(process.env.PORT || "3000", 10);
 
-  // 🟢 修复 9: 显式监听 0.0.0.0，强制使用 IPv4，避免 Mac 环境下的 IPv6 兼容性问题
   server.listen(port, "0.0.0.0", () => {
     console.log(`> Ready on http://0.0.0.0:${port}`);
   });
