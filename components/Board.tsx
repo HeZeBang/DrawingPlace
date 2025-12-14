@@ -120,6 +120,7 @@ const Board = () => {
       auth: {
         token: token,
       },
+      transports: ["websocket"], // Use WebSocket only, avoid long-polling
     });
 
     socket.on("connect", () => {
