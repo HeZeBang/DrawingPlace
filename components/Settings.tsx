@@ -78,7 +78,8 @@ function SettingsContent({ className }: React.ComponentProps<"form">) {
   return (
     <form className={cn("grid items-start gap-6 py-2", className)}>
       {Object.entries(SettingsEntries).map(
-        ([key, { label, description, displayType }]) => {
+        ([key, { label, description, displayType, isHidden }]) => {
+          if (isHidden) return null;
           if (displayType === "boolean") {
             return (
               <div key={key} className="grid gap-1.5">
