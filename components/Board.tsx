@@ -29,8 +29,6 @@ import { ViewMode } from "@/lib/frontend-settings";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
-let socket;
-
 const Board = () => {
   const { config } = useRuntimeConfigContext();
   const [points, setPoints] = useState([]);
@@ -64,6 +62,7 @@ const Board = () => {
   } = useSettingsConfigContext();
   const isFetchingRef = useRef(false);
   const bufferRef = useRef<any[]>([]);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
@@ -116,51 +115,57 @@ const Board = () => {
       console.error("No draw token found in localStorage");
     }
 
-    socket = io({
+    // 如果已经有连接，先断开（防止热重载或依赖变化时的重复连接）
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    const newSocket = io({
       auth: {
         token: token,
       },
-      transports: ["websocket"], // Use WebSocket only, avoid long-polling
+      reconnectionDelay: 1000,
     });
 
-    socket.on("connect", () => {
+    // 将实例保存到 ref 中供其他地方使用
+    socketRef.current = newSocket;
+
+    newSocket.on("connect", () => {
       console.log("Connected to socket", {
-        socketId: socket.id,
-        connected: socket.connected,
-        transport: socket.io.engine.transport.name
+        socketId: newSocket.id,
+        connected: newSocket.connected,
+        transport: newSocket.io.engine.transport.name
       });
       toast.success("已连接到服务器");
       updateStatusConfig({ isConnected: true });
       fetchData();
     });
 
-    socket.on("authenticated", () => {
+    newSocket.on("authenticated", () => {
       console.log("Authenticated with token");
       updateStatusConfig({ isTokenValid: true });
     });
 
-    socket.on("connect_error", (err) => {
+    newSocket.on("connect_error", (err) => {
       console.error("Connection error:", {
         message: err.message,
-        code: err.code,
-        type: err.type,
-        socketId: socket.id
+        socketId: newSocket.id
       });
       updateStatusConfig({ isConnected: false, isTokenValid: false });
     });
 
-    socket.on("disconnect", (reason) => {
+    newSocket.on("disconnect", (reason) => {
       console.log("Disconnected from socket", { reason });
       toast.error("与服务器的连接已断开");
       updateStatusConfig({ isConnected: false });
     });
 
-    socket.on("onlineClientsUpdated", (data) => {
+    newSocket.on("onlineClientsUpdated", (data) => {
       console.log("Current connected clients:", data.count);
       updateStatusConfig({ onlineClients: data.count });
     });
 
-    socket.on("draw", (data) => {
+    newSocket.on("draw", (data) => {
       if (isFetchingRef.current) {
         bufferRef.current.push(data);
       } else {
@@ -168,13 +173,18 @@ const Board = () => {
       }
     });
 
-    socket.on("sync", (data) => {
+    newSocket.on("sync", (data) => {
       syncFromServer(data.pointsLeft, data.lastUpdate);
       console.log("Synced from server", data);
     });
 
     return () => {
-      if (socket) socket.disconnect();
+      if (newSocket) {
+        newSocket.disconnect();
+        if (socketRef.current === newSocket) {
+          socketRef.current = null;
+        }
+      }
     };
   }, [config.DRAW_DELAY_MS, syncFromServer, token]);
 
@@ -205,12 +215,11 @@ const Board = () => {
           return;
         }
 
-        // 检查连接状态
-        if (!socket.connected) {
+        if (!socketRef.current || !socketRef.current.connected) {
           console.warn("Socket not connected", {
-            connected: socket.connected,
-            socketId: socket.id,
-            readyState: socket.io.engine.readyState
+            connected: socketRef.current?.connected,
+            socketId: socketRef.current?.id,
+            readyState: socketRef.current?.io.engine.readyState
           });
           toast.error("未连接到服务器，正在重连...");
           resolve({ success: false, nextRecoverIn });
@@ -231,7 +240,7 @@ const Board = () => {
         }
 
         // Emit to server with token and handle response
-        socket.emit("draw", payload, (result: AppError) => {
+        socketRef.current?.emit("draw", payload, (result: AppError) => {
           console.log("Draw response received", {
             code: result.code,
             message: result.message,
@@ -287,10 +296,10 @@ const Board = () => {
         }
 
         // 检查连接状态
-        if (!socket.connected) {
+        if (!socketRef.current || !socketRef.current.connected) {
           console.warn("Socket not connected during AutoDraw", {
-            connected: socket.connected,
-            socketId: socket.id
+            connected: socketRef.current?.connected,
+            socketId: socketRef.current?.id
           });
           resolve({ success: false, nextRecoverIn: 1000 });
           return;
@@ -309,7 +318,7 @@ const Board = () => {
         }
 
         // Emit to server with token and handle response
-        socket.emit("draw", payload, (result: AppError) => {
+        socketRef.current.emit("draw", payload, (result: AppError) => {
           console.log("AutoDraw response received", {
             code: result.code,
             message: result.message
