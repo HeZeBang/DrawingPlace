@@ -3,6 +3,7 @@ import dbConnect from "@/lib/db";
 import UserSession from "@/models/UserSession";
 import { ExchangeTokenRequestSchema } from "@/lib/schemas";
 import crypto from "crypto";
+import { createClient } from "redis";
 
 // Server-side Casdoor config
 const serverConfig = {
@@ -118,6 +119,17 @@ export async function POST(request: Request) {
       token: drawToken,
       createdAt: new Date(),
     });
+
+    // Cache token in Redis for 24 hours for faster lookup across replicas
+    try {
+      const redisClient = createClient({ url: process.env.REDIS_URI || "redis://localhost:6379" });
+      await redisClient.connect();
+      await redisClient.setEx(`draw:token:${drawToken}`, 86400, userId);
+      await redisClient.quit();
+    } catch (e) {
+      console.warn("Failed to cache token in Redis:", e);
+      // Continue anyway - MongoDB will be the fallback
+    }
 
     console.log(`Generated new token for user ${userId}: ${drawToken}`);
     return NextResponse.json({ token: drawToken });

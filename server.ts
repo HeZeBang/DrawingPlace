@@ -2,6 +2,8 @@ import { createServer } from "http";
 import { parse } from "url";
 import next from "next";
 import { Server } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { createClient } from "redis";
 import dbConnect from "./lib/db";
 import Point from "./models/Point";
 import Action from "./models/Action";
@@ -14,6 +16,7 @@ dotenv.config();
 const serverConfig = {
   NODE_ENV: process.env.NODE_ENV,
   MONGO_URI: process.env.MONGO_URI,
+  REDIS_URI: process.env.REDIS_URI,
   DRAW_DELAY_MS: process.env.DRAW_DELAY_MS,
   DRAW_MAX_POINTS: process.env.DRAW_MAX_POINTS,
   CANVAS_WIDTH: process.env.CANVAS_WIDTH,
@@ -77,9 +80,9 @@ async function createAction(params: any) {
 }
 
 // Global state for statistics
-let onlineClientsCount = 0;
+// let onlineClientsCount = 0;
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
     handle(req, res, parsedUrl);
@@ -87,18 +90,37 @@ app.prepare().then(() => {
 
   const io = new Server(server);
 
+  const pubClient = createClient({ url: serverConfig.REDIS_URI || "redis://localhost:6379" });
+  const subClient = pubClient.duplicate();
+  const redisClient = pubClient.duplicate();
+
+  await Promise.all([pubClient.connect(), subClient.connect(), redisClient.connect()]);
+
+  io.adapter(createAdapter(pubClient, subClient));
+
   // Rate limiting map
-  const lastPointUpdates = new Map<string, number>();
-  const lastPoints = new Map<string, number>();
+  // const lastPointUpdates = new Map<string, number>();
+  // const lastPoints = new Map<string, number>();
 
   // Socket authentication middleware
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
     if (token) {
       try {
-        const session = await UserSession.findOne({ token });
-        if (session) {
+        // Try Redis cache first
+        const cachedUserId = await redisClient.get(`draw:token:${token}`);
+        if (cachedUserId) {
           socket.data.token = token;
+          socket.data.userId = cachedUserId;
+        } else {
+          // Fall back to MongoDB query
+          const session = await UserSession.findOne({ token });
+          if (session) {
+            socket.data.token = token;
+            socket.data.userId = session.userId;
+            // Cache in Redis for 24 hours
+            await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
+          }
         }
       } catch (e) {
         console.error("Auth error", e);
@@ -109,11 +131,11 @@ app.prepare().then(() => {
     next();
   });
 
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
     console.log("Client connected");
 
     // Increment connected clients count
-    onlineClientsCount++;
+    const onlineClientsCount = await redisClient.incr("draw:online_count");
     console.log(`Connected clients: ${onlineClientsCount}`);
     io.emit("onlineClientsUpdated", { count: onlineClientsCount });
 
@@ -152,10 +174,21 @@ app.prepare().then(() => {
       let user: { id: string; token: string } | null = null;
       if (token) {
         try {
-          const session = await UserSession.findOne({ token });
-          if (session) {
-            user = { id: session.userId, token: token };
+          // Try Redis cache first
+          const cachedUserId = await redisClient.get(`draw:token:${token}`);
+          if (cachedUserId) {
+            user = { id: cachedUserId.toString(), token: token };
           } else {
+            // Fall back to MongoDB query
+            const session = await UserSession.findOne({ token });
+            if (session) {
+              user = { id: session.userId, token: token };
+              // Cache in Redis for 24 hours
+              await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
+            }
+          }
+          
+          if (!user) {
             if (cb)
               cb({ code: AppErrorCode.InvalidToken, message: "Invalid token" });
             return;
@@ -194,12 +227,13 @@ app.prepare().then(() => {
         ? parseInt(serverConfig.DRAW_MAX_POINTS)
         : 24;
       const now = Date.now();
-      const lastPointUpdate = lastPointUpdates.has(user.id)
-        ? lastPointUpdates.get(user.id)
-        : now; // if not found, then it is new user
-      const lastPoint = lastPoints.has(user.id)
-        ? lastPoints.get(user.id)
-        : maxPoints; // default to max points
+
+      const lastPointUpdateStr = await redisClient.get(`draw:user:${user.id}:last_update`);
+      const lastPointUpdate = lastPointUpdateStr ? parseInt(lastPointUpdateStr.toString()) : now;
+
+      const lastPointStr = await redisClient.get(`draw:user:${user.id}:points`);
+      const lastPoint = lastPointStr ? parseInt(lastPointStr.toString()) : maxPoints;
+
       let timePassed = now - lastPointUpdate;
       const delay = serverConfig.DRAW_DELAY_MS
         ? parseInt(serverConfig.DRAW_DELAY_MS)
@@ -229,8 +263,8 @@ app.prepare().then(() => {
         if (rawCurrentPoints < maxPoints) {
           newUpdatedAt = now - (timePassed % delay);
         }
-        lastPoints.set(user.id, currentPoints);
-        lastPointUpdates.set(user.id, newUpdatedAt);
+        await redisClient.set(`draw:user:${user.id}:points`, currentPoints.toString());
+        await redisClient.set(`draw:user:${user.id}:last_update`, newUpdatedAt.toString());
       }
 
       // Broadcast to others(including self)
@@ -264,18 +298,15 @@ app.prepare().then(() => {
       });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log("Client disconnected");
 
       // Decrement connected clients count
-      onlineClientsCount--;
+      const onlineClientsCount = await redisClient.decr("draw:online_count");
       console.log(`Connected clients: ${onlineClientsCount}`);
       io.emit("onlineClientsUpdated", { count: onlineClientsCount });
     });
   });
-
-  // Export function to get online clients count
-  const getOnlineClients = () => onlineClientsCount;
 
   const port = process.env.PORT || 3000;
 
