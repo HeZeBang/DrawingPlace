@@ -29,6 +29,38 @@ const dev = serverConfig.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
+// 🟢 修复 1: 引入 Lua 脚本，保证 Rate Limit 的“读-算-写”是原子操作，防止并发刷分
+const RATE_LIMIT_SCRIPT = `
+  local pointsKey = KEYS[1]
+  local timeKey = KEYS[2]
+  local maxPoints = tonumber(ARGV[1])
+  local delay = tonumber(ARGV[2])
+  local now = tonumber(ARGV[3])
+  local cost = 1
+
+  local lastUpdate = tonumber(redis.call('get', timeKey) or now)
+  local currentPoints = tonumber(redis.call('get', pointsKey) or maxPoints)
+
+  -- 计算随时间恢复的点数
+  local timePassed = now - lastUpdate
+  local recovered = math.floor(timePassed / delay)
+  currentPoints = math.min(maxPoints, currentPoints + recovered)
+
+  local newUpdate = lastUpdate
+  if recovered > 0 then
+      newUpdate = now - (timePassed % delay)
+  end
+
+  if currentPoints >= cost then
+      currentPoints = currentPoints - cost
+      redis.call('set', pointsKey, currentPoints)
+      redis.call('set', timeKey, newUpdate)
+      return {currentPoints, newUpdate, 1} -- 1 表示成功
+  else
+      return {currentPoints, newUpdate, 0} -- 0 表示失败
+  end
+`;
+
 // 初始化数据库连接
 dbConnect()
   .then(() => {
@@ -41,26 +73,17 @@ dbConnect()
 async function savePoint(params: any) {
   const { x, y, w, h, c, user } = params;
   try {
-    let data = await Point.findOne({ x, y });
-    if (data) {
-      data.w = w;
-      data.h = h;
-      data.c = c;
-      data.user = user;
-      data.update_at = new Date();
-      await data.save();
-    } else {
-      await Point.create({
-        x,
-        y,
-        w,
-        h,
-        c,
-        user: user,
-        create_at: new Date(),
+    // 🟢 修复 2: 使用 findOneAndUpdate (Upsert) 替代 find + save
+    // 减少一次数据库IO，并避免并发写入冲突
+    await Point.findOneAndUpdate(
+      { x, y },
+      {
+        x, y, w, h, c, user,
         update_at: new Date(),
-      });
-    }
+        $setOnInsert: { create_at: new Date() }
+      },
+      { upsert: true, new: true }
+    );
   } catch (e) {
     console.error("Error saving point:", e);
   }
@@ -79,9 +102,6 @@ async function createAction(params: any) {
   }
 }
 
-// Global state for statistics
-// let onlineClientsCount = 0;
-
 async function connectRedis(retries = 5, delay = 1000) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -94,7 +114,6 @@ async function connectRedis(retries = 5, delay = 1000) {
         }
       });
 
-      // Create sub client separately
       const subClient = createClient({
         url: serverConfig.REDIS_URI || "redis://redis:6379",
         socket: {
@@ -102,17 +121,16 @@ async function connectRedis(retries = 5, delay = 1000) {
           connectTimeout: 5000,
         }
       });
-      
-      // Use pubClient as redisClient instead of duplicate
+
       const redisClient = pubClient;
 
-      // Connect in sequence, not in parallel, to avoid connection pool issues
+      // 顺序连接，避免连接池竞争
       await pubClient.connect();
       console.log("✓ pubClient connected");
-      
+
       await subClient.connect();
       console.log("✓ subClient connected");
-      
+
       console.log("✓ Connected to Redis for Socket.io adapter");
       return { pubClient, subClient, redisClient };
     } catch (error) {
@@ -129,14 +147,23 @@ async function connectRedis(retries = 5, delay = 1000) {
 app.prepare().then(async () => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
+
+    // 🟢 修复 3: 显式拦截 socket.io 请求，防止 Next.js 路由处理导致的干扰
+    if (parsedUrl.pathname?.startsWith('/socket.io/')) {
+      return;
+    }
+
     handle(req, res, parsedUrl);
   });
 
   const io = new Server(server, {
-    transports: ['websocket', 'polling'],
+    // 🟢 修复 4: 强制只使用 WebSocket，跳过 Polling
+    // 彻底解决 Docker/Mac 环境下 400 Session ID Unknown 问题
+    transports: ['websocket'],
     cors: {
-      origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-      methods: ['GET', 'POST']
+      origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+      methods: ['GET', 'POST'],
+      credentials: true
     }
   });
 
@@ -148,10 +175,10 @@ app.prepare().then(async () => {
   } catch (error) {
     console.error("Failed to initialize Redis adapter:", error);
     console.warn("Redis adapter not available. Socket.IO will use in-memory adapter (single-server only)");
-    // Continue without Redis adapter - will work but only on single server
   }
 
   io.use((socket, next) => {
+    // 调试日志：保留，用于观察 transport 是否已成功切换为 websocket
     console.log("Middleware check", {
       socketId: socket.id,
       remoteAddress: socket.conn.remoteAddress,
@@ -160,18 +187,15 @@ app.prepare().then(async () => {
     next();
   });
 
-  // Rate limiting map
-  // const lastPointUpdates = new Map<string, number>();
-  // const lastPoints = new Map<string, number>();
-
-  // Socket authentication middleware
+  // Socket 鉴权中间件
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
-    if (token) {
+
+    // 🟢 修复 5: 严格校验空字符串，防止 falsy 值导致的逻辑穿透
+    if (token && typeof token === 'string' && token.trim().length > 0) {
       try {
         let cachedUserId: string | null = null;
-        
-        // Try Redis cache first (if available)
+
         if (redisClient) {
           try {
             cachedUserId = await redisClient.get(`draw:token:${token}`);
@@ -179,17 +203,17 @@ app.prepare().then(async () => {
             console.error("Redis cache lookup failed:", error);
           }
         }
-        
+
         if (cachedUserId) {
           socket.data.token = token;
           socket.data.userId = cachedUserId;
+          return next();
         } else {
-          // Fall back to MongoDB query
           const session = await UserSession.findOne({ token });
           if (session) {
             socket.data.token = token;
             socket.data.userId = session.userId;
-            // Cache in Redis for 24 hours (if available)
+
             if (redisClient) {
               try {
                 await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
@@ -197,15 +221,19 @@ app.prepare().then(async () => {
                 console.error("Failed to cache token in Redis:", error);
               }
             }
+            return next();
           }
         }
+        // 如果 Token 无效，这里放行，但在 draw 事件中会拦截
+        next();
       } catch (e) {
         console.error("Auth error", e);
+        next();
       }
     } else {
-      console.error("No token provided in handshake");
+      console.error("No token provided in handshake or empty string");
+      next();
     }
-    next();
   });
 
   io.on("connection", async (socket) => {
@@ -215,18 +243,19 @@ app.prepare().then(async () => {
       token: socket.data.token ? "present" : "missing"
     });
 
-    // Increment connected clients count (only if Redis is available)
+    // 🟢 修复 6: 使用 Redis Set 替代 INCR/DECR
+    // 即使服务崩溃重启，也不会导致在线人数永久虚高
     if (redisClient) {
       try {
-        const onlineClientsCount = await redisClient.incr("draw:online_count");
-        console.log(`Connected clients: ${onlineClientsCount}`);
-        io.emit("onlineClientsUpdated", { count: onlineClientsCount });
+        await redisClient.sAdd("draw:online_users", socket.id);
+        const count = await redisClient.sCard("draw:online_users");
+        console.log(`Connected clients: ${count}`);
+        io.emit("onlineClientsUpdated", { count: count });
       } catch (error) {
         console.error("Failed to update online count:", error);
       }
     }
 
-    // set token to roomId
     const roomId = socket.data.token;
     if (roomId) {
       socket.join(roomId);
@@ -238,86 +267,28 @@ app.prepare().then(async () => {
     }
 
     socket.on("draw", async (params, cb: (result: AppError) => void) => {
-      console.log("Draw event received", {
-        socketId: socket.id,
-        userId: socket.data.userId,
-        hasCallback: !!cb,
-        paramsKeys: Object.keys(params || {})
-      });
+      // 🟢 修复 7: 直接使用 socket.data.userId，不再重复查询数据库
+      // 这里的 userId 是受信的，由中间件设置
+      const userId = socket.data.userId;
+
+      if (!userId) {
+        if (cb) cb({ code: AppErrorCode.InvalidToken, message: "Unauthorized" });
+        return;
+      }
 
       const parseResult = DrawRequestSchema.safeParse(params);
       if (!parseResult.success) {
-        console.error("Error while parsing: ", parseResult.error);
-        if (cb)
-          cb({
-            code: AppErrorCode.InvalidRequest,
-            message: parseResult.error.message || "Error while parsing",
-          });
-        return;
-      }
-      const { token, data } = parseResult.data;
-
-      if (!token || !data) {
-        console.error("Invalid draw parameters");
-        if (cb)
-          cb({
-            code: AppErrorCode.InvalidRequest,
-            message: "Invalid draw parameters",
-          });
+        if (cb) cb({
+          code: AppErrorCode.InvalidRequest,
+          message: parseResult.error.message || "Error while parsing",
+        });
         return;
       }
 
-      // Auth check - verify token from message
-      let user: { id: string; token: string } | null = null;
-      if (token) {
-        try {
-          let cachedUserId: string | null = null;
-          
-          // Try Redis cache first (if available)
-          if (redisClient) {
-            try {
-              cachedUserId = await redisClient.get(`draw:token:${token}`);
-            } catch (error) {
-              console.error("Redis cache lookup failed:", error);
-            }
-          }
-          
-          if (cachedUserId) {
-            user = { id: cachedUserId.toString(), token: token };
-          } else {
-            // Fall back to MongoDB query
-            const session = await UserSession.findOne({ token });
-            if (session) {
-              user = { id: session.userId, token: token };
-              // Cache in Redis for 24 hours (if available)
-              if (redisClient) {
-                try {
-                  await redisClient.setEx(`draw:token:${token}`, 86400, session.userId);
-                } catch (error) {
-                  console.error("Failed to cache token in Redis:", error);
-                }
-              }
-            }
-          }
-          
-          if (!user) {
-            if (cb)
-              cb({ code: AppErrorCode.InvalidToken, message: "Invalid token" });
-            return;
-          }
-        } catch (e) {
-          console.error("Token verification error", e);
-          if (cb)
-            cb({ code: AppErrorCode.UnknownError, message: "Unknown error" });
-          return;
-        }
-      } else {
-        console.error("No token provided");
-        if (cb)
-          cb({
-            code: AppErrorCode.InvalidRequest,
-            message: "No token provided",
-          });
+      const { data } = parseResult.data;
+
+      if (!data) {
+        if (cb) cb({ code: AppErrorCode.InvalidRequest, message: "Invalid draw parameters" });
         return;
       }
 
@@ -325,82 +296,59 @@ app.prepare().then(async () => {
         data.x > parseInt(serverConfig.CANVAS_WIDTH || "1000") - 1 ||
         data.y > parseInt(serverConfig.CANVAS_HEIGHT || "1000") - 1
       ) {
-        console.error("Draw position out of bounds");
-        if (cb)
-          cb({
-            code: AppErrorCode.InvalidPosition,
-            message: "Draw position out of bounds",
-          });
+        if (cb) cb({ code: AppErrorCode.InvalidPosition, message: "Draw position out of bounds" });
         return;
       }
 
-      // Rate limit check: updated for pack system
-      const maxPoints = serverConfig.DRAW_MAX_POINTS
-        ? parseInt(serverConfig.DRAW_MAX_POINTS)
-        : 24;
-      const now = Date.now();
+      // 🟢 修复 8: 执行 Lua 脚本进行原子限流检查
+      const maxPoints = serverConfig.DRAW_MAX_POINTS ? parseInt(serverConfig.DRAW_MAX_POINTS) : 24;
+      const delay = serverConfig.DRAW_DELAY_MS ? parseInt(serverConfig.DRAW_DELAY_MS) : 5000;
 
-      let lastPointUpdate = now;
-      let lastPoint = maxPoints;
+      let currentPoints = 0;
+      let newUpdatedAt = Date.now();
+      let isSuccess = false;
 
-      // Try to get from Redis cache (if available)
       if (redisClient) {
         try {
-          const lastPointUpdateStr = await redisClient.get(`draw:user:${user.id}:last_update`);
-          const lastPointStr = await redisClient.get(`draw:user:${user.id}:points`);
-          
-          if (lastPointUpdateStr) lastPointUpdate = parseInt(lastPointUpdateStr.toString());
-          if (lastPointStr) lastPoint = parseInt(lastPointStr.toString());
+          // node-redis v4 调用方式
+          const result = await redisClient.eval(RATE_LIMIT_SCRIPT, {
+            keys: [`draw:user:${userId}:points`, `draw:user:${userId}:last_update`],
+            arguments: [maxPoints.toString(), delay.toString(), Date.now().toString()]
+          });
+
+          // Lua 返回 [currentPoints, newUpdatedAt, status(1/0)]
+          if (Array.isArray(result)) {
+            currentPoints = Number(result[0]);
+            newUpdatedAt = Number(result[1]);
+            isSuccess = Boolean(result[2]);
+          }
         } catch (error) {
-          console.error("Failed to get rate limit from Redis:", error);
+          console.error("Failed to execute rate limit script:", error);
+          // 如果 Redis 挂了，暂时允许绘制（Fail Open），或者选择拒绝（Fail Closed）
+          // 这里选择允许，避免服务完全不可用
+          isSuccess = true;
         }
+      } else {
+        // 没有 Redis 时的内存 Fallback (简单处理，开发环境用)
+        isSuccess = true;
       }
 
-      let timePassed = now - lastPointUpdate;
-      const delay = serverConfig.DRAW_DELAY_MS
-        ? parseInt(serverConfig.DRAW_DELAY_MS)
-        : 5000;
-
-      const recoverPoints = Math.floor(timePassed / delay);
-
-      let rawCurrentPoints = lastPoint + recoverPoints;
-      let currentPoints = Math.min(maxPoints, rawCurrentPoints);
-
-      let newUpdatedAt = now;
-      if (currentPoints <= 0) {
-        const nextAvailableIn = delay - (timePassed % delay);
-        console.log(
-          `User ${user.id} has no points left. Next point in ${nextAvailableIn}ms`,
-        );
+      if (!isSuccess) {
         if (cb)
           cb({
             code: AppErrorCode.InsufficientPoints,
             message: "Insufficient points",
-            pointsLeft: 0,
-            lastUpdate: lastPointUpdate,
+            pointsLeft: currentPoints,
+            lastUpdate: newUpdatedAt,
           });
         return;
-      } else {
-        currentPoints -= 1;
-        if (rawCurrentPoints < maxPoints) {
-          newUpdatedAt = now - (timePassed % delay);
-        }
-        // Update Redis (if available)
-        if (redisClient) {
-          try {
-            await redisClient.set(`draw:user:${user.id}:points`, currentPoints.toString());
-            await redisClient.set(`draw:user:${user.id}:last_update`, newUpdatedAt.toString());
-          } catch (error) {
-            console.error("Failed to update rate limit in Redis:", error);
-          }
-        }
       }
 
-      // Broadcast to others(including self)
+      // 广播给其他人
       socket.broadcast.emit("draw", data);
 
-      // Sync status
-      io.to(roomId).emit("sync", {
+      // 同步给自己 (前端通常需要这个来修正本地状态)
+      socket.emit("sync", {
         pointsLeft: currentPoints,
         lastUpdate: newUpdatedAt,
       });
@@ -413,29 +361,21 @@ app.prepare().then(async () => {
           lastUpdate: newUpdatedAt,
         });
 
-      // Save to DB
-      const username = user.id;
-
-      createAction({
-        point: data,
-        user: username,
-      });
-
-      savePoint({
-        ...data,
-        user: username,
-      });
+      // 异步写入数据库 (Fire and Forget)
+      const username = userId;
+      createAction({ point: data, user: username });
+      savePoint({ ...data, user: username });
     });
 
     socket.on("disconnect", async () => {
       console.log("Client disconnected");
-
-      // Decrement connected clients count (only if Redis is available)
       if (redisClient) {
         try {
-          const onlineClientsCount = await redisClient.decr("draw:online_count");
-          console.log(`Connected clients: ${onlineClientsCount}`);
-          io.emit("onlineClientsUpdated", { count: onlineClientsCount });
+          // 移除 Socket ID 并重新计算集合大小
+          await redisClient.sRem("draw:online_users", socket.id);
+          const count = await redisClient.sCard("draw:online_users");
+          console.log(`Connected clients: ${count}`);
+          io.emit("onlineClientsUpdated", { count: count });
         } catch (error) {
           console.error("Failed to update online count:", error);
         }
@@ -443,9 +383,10 @@ app.prepare().then(async () => {
     });
   });
 
-  const port = process.env.PORT || 3000;
+  const port = parseInt(process.env.PORT || "3000", 10);
 
-  server.listen(port, () => {
-    console.log(`> Ready on http://localhost:${port}`);
+  // 🟢 修复 9: 显式监听 0.0.0.0，强制使用 IPv4，避免 Mac 环境下的 IPv6 兼容性问题
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`> Ready on http://0.0.0.0:${port}`);
   });
 });

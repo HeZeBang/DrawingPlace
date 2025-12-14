@@ -124,6 +124,7 @@ const Board = () => {
       auth: {
         token: token,
       },
+      transports: ["websocket"],
       reconnectionDelay: 1000,
     });
 
