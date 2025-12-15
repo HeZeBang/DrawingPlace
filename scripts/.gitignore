@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+ffmpeg_log.txt
+timelapse.mp4
