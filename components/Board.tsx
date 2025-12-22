@@ -92,7 +92,8 @@ const Board = () => {
     const fetchData = () => {
       isFetchingRef.current = true;
       bufferRef.current = [];
-      fetch("/api/place")
+      
+      const fetchPromise = fetch("/api/place")
         .then((res) => res.json())
         .then((res) => {
           if (res.status) {
@@ -102,12 +103,20 @@ const Board = () => {
             canvasRef.current?.init(newPoints);
             setColors(res.data.colors);
             setDelay(res.data.delay || config.DRAW_DELAY_MS);
+            return { pointCount: newPoints.length };
           }
+          throw new Error("Failed to fetch data");
         })
         .finally(() => {
           isFetchingRef.current = false;
           bufferRef.current = [];
         });
+
+      toast.promise(fetchPromise, {
+        loading: "加载画板数据中...",
+        success: (data) => `已加载 ${data.pointCount} 个绘制点`,
+        error: "画板数据加载失败",
+      });
     };
 
     // Load initial data
@@ -140,7 +149,7 @@ const Board = () => {
         connected: newSocket.connected,
         transport: newSocket.io.engine.transport.name,
       });
-      toast.success("已连接到服务器");
+      // toast.success("已连接到服务器");
       updateStatusConfig({ isConnected: true });
       fetchData();
     });
