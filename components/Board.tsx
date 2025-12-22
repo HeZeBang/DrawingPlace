@@ -13,7 +13,7 @@ import {
   View,
   Bot,
 } from "lucide-react";
-import Canvas from "./Canvas";
+import Canvas, { CanvasRef } from "./Canvas";
 import Dock from "./Dock";
 import LoginModal from "./LoginModal";
 import AutoDrawModal from "./AutoDrawModal";
@@ -31,7 +31,8 @@ import { cn } from "@/lib/utils";
 
 const Board = () => {
   const { config } = useRuntimeConfigContext();
-  const [points, setPoints] = useState([]);
+  const pointsRef = useRef<any[]>([]);
+  const canvasRef = useRef<CanvasRef>(null);
   const [colors, setColors] = useState([]);
   const [delay, setDelay] = useState(0);
   const [selectedColor, setSelectedColor] = useState("#000000");
@@ -96,7 +97,9 @@ const Board = () => {
         .then((res) => {
           if (res.status) {
             const buffered = bufferRef.current;
-            setPoints([...res.data.points, ...buffered]);
+            const newPoints = [...res.data.points, ...buffered];
+            pointsRef.current = newPoints;
+            canvasRef.current?.init(newPoints);
             setColors(res.data.colors);
             setDelay(res.data.delay || config.DRAW_DELAY_MS);
           }
@@ -179,7 +182,8 @@ const Board = () => {
       if (isFetchingRef.current) {
         bufferRef.current.push(data);
       } else {
-        setPoints((prev) => [...prev, data]);
+        pointsRef.current.push(data);
+        canvasRef.current?.drawPoint(data);
       }
     });
 
@@ -259,7 +263,8 @@ const Board = () => {
 
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and sync from server
-            setPoints((prev) => [...prev, params]);
+            pointsRef.current.push(params);
+            canvasRef.current?.drawPoint(params);
             // Always sync from server to avoid conflicts
             if (
               result.pointsLeft !== undefined &&
@@ -343,7 +348,8 @@ const Board = () => {
 
           if (result.code === AppErrorCode.Success) {
             // Success: Add point and sync from server
-            setPoints((prev) => [...prev, params]);
+            pointsRef.current.push(params);
+            canvasRef.current?.drawPoint(params);
             // Always sync from server to avoid conflicts
             if (
               result.pointsLeft !== undefined &&
@@ -464,7 +470,7 @@ const Board = () => {
               }}
             >
               <Canvas
-                dataSource={points}
+                ref={canvasRef}
                 color={selectedColor}
                 onMove={handleMove}
                 onDraw={handleDraw}

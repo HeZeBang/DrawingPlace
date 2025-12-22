@@ -1,97 +1,135 @@
 "use client";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { cn } from "@/lib/utils";
 
-const Canvas = ({ dataSource, color, onMove, onDraw, editable, opacity }) => {
-  const canvasRef = useRef(null);
+export interface CanvasRef {
+  drawPoint: (p: any) => void;
+  drawBatch: (points: any[]) => void;
+  clear: () => void;
+  init: (points: any[]) => void;
+}
 
-  const { config } = useRuntimeConfigContext();
-  const size = { width: config.CANVAS_WIDTH, height: config.CANVAS_HEIGHT };
+const Canvas = forwardRef(
+  ({ color, onMove, onDraw, editable, opacity }: any, ref) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Helper to draw a point
-  const drawPoint = (ctx, p) => {
-    if (!p) return;
-    ctx.fillStyle = p.c;
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-  };
+    const { config } = useRuntimeConfigContext();
+    const size = { width: config.CANVAS_WIDTH, height: config.CANVAS_HEIGHT };
 
-  // Initialize and redraw canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    // Helper to draw a point
+    const drawPoint = (ctx: CanvasRenderingContext2D, p: any) => {
+      if (!p) return;
+      ctx.fillStyle = p.c;
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+    };
 
-    // Set canvas size to logical size
-    canvas.width = size.width;
-    canvas.height = size.height;
+    useImperativeHandle(ref, () => ({
+      drawPoint: (p: any) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (ctx) drawPoint(ctx, p);
+      },
+      drawBatch: (points: any[]) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        points.forEach((p) => drawPoint(ctx, p));
+      },
+      clear: () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      },
+      init: (points: any[]) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        canvas.width = size.width;
+        canvas.height = size.height;
+        points.forEach((p) => drawPoint(ctx, p));
+      },
+    }));
 
-    // Redraw all points
-    if (dataSource) {
-      dataSource.forEach((p) => drawPoint(ctx, p));
-    }
-  }, [dataSource]);
+    // Initialize canvas size
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.width = size.width;
+        canvas.height = size.height;
+      }
+    }, [size.width, size.height]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-    }
-  }, [canvasRef]);
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+      }
+    }, [canvasRef]);
 
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
-    if (!editable || !color) return;
+    const handleMouseDown = (e: any) => {
+      if (e.button !== 0) return;
+      if (!editable || !color) return;
 
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
 
-    // Calculate position relative to the canvas element
-    // Since we rely on CSS transform for zoom, rect will be the zoomed size.
+      // Calculate position relative to the canvas element
+      // Since we rely on CSS transform for zoom, rect will be the zoomed size.
 
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
 
-    const x = Math.floor((e.clientX - rect.left) * scaleX);
-    const y = Math.floor((e.clientY - rect.top) * scaleY);
+      const x = Math.floor((e.clientX - rect.left) * scaleX);
+      const y = Math.floor((e.clientY - rect.top) * scaleY);
 
-    onDraw({
-      x,
-      y,
-      w: 1,
-      h: 1,
-      c: color,
-    });
-  };
+      onDraw({
+        x,
+        y,
+        w: 1,
+        h: 1,
+        c: color,
+      });
+    };
 
-  const handleMouseMove = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const handleMouseMove = (e: any) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
 
-    const x = Math.floor((e.clientX - rect.left) * scaleX);
-    const y = Math.floor((e.clientY - rect.top) * scaleY);
+      const x = Math.floor((e.clientX - rect.left) * scaleX);
+      const y = Math.floor((e.clientY - rect.top) * scaleY);
 
-    if (onMove) onMove({ x, y });
-  };
+      if (onMove) onMove({ x, y });
+    };
 
-  return (
-    <canvas
-      ref={canvasRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      className={cn(
-        "block react-zoom-pan-pinch-no-pan z-0",
-        editable ? "cursor-crosshair" : "cursor-default",
-      )}
-      style={{
-        width: size.width + "px",
-        height: size.height + "px",
-        imageRendering: "pixelated", // Ensure crisp edges when zoomed
-        opacity: opacity,
-      }}
-    />
-  );
-};
+    return (
+      <canvas
+        ref={canvasRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        className={cn(
+          "block react-zoom-pan-pinch-no-pan z-0",
+          editable ? "cursor-crosshair" : "cursor-default",
+        )}
+        style={{
+          width: size.width + "px",
+          height: size.height + "px",
+          imageRendering: "pixelated", // Ensure crisp edges when zoomed
+          opacity: opacity,
+        }}
+      />
+    );
+  },
+);
+
+Canvas.displayName = "Canvas";
 
 export default Canvas;
