@@ -92,7 +92,7 @@ const Board = () => {
     const fetchData = () => {
       isFetchingRef.current = true;
       bufferRef.current = [];
-      
+
       const fetchPromise = fetch("/api/place")
         .then((res) => res.json())
         .then((res) => {
@@ -505,7 +505,8 @@ const Board = () => {
                   style={{
                     left: location.x + 1,
                     top: location.y + 1,
-                    backgroundColor: (editable && selectedColor) || "transparent",
+                    backgroundColor:
+                      (editable && selectedColor) || "transparent",
                   }}
                 />
               )}
@@ -573,7 +574,9 @@ const Board = () => {
             />
           </div>
           <div className="text-xs text-center flex flex-col">
-            <span className="">{title} v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+            <span className="">
+              {title} v{process.env.NEXT_PUBLIC_APP_VERSION}
+            </span>
             <span className="text-muted-foreground">
               Made with ❤️ by{" "}
               <a
