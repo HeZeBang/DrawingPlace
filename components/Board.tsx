@@ -281,6 +281,10 @@ const Board = () => {
             );
             toast.info(`请等待 ${Math.ceil(nextRecoverIn / 1000)}s 后再绘制`);
             resolve({ success: false, nextRecoverIn });
+          } else if (result.code === AppErrorCode.InvalidToken) {
+            toast.error("Token 已经失效，请刷新");
+            updateStatusConfig({ isTokenValid: false });
+            resolve({ success: false });
           } else {
             // Failed: Show error message or handle failure
             // Could add a toast notification here
@@ -365,6 +369,10 @@ const Board = () => {
               result.lastUpdate || Date.now(),
             );
             resolve({ success: false, nextRecoverIn });
+          } else if (result.code === AppErrorCode.InvalidToken) {
+            toast.error("Token 已经失效，请刷新");
+            updateStatusConfig({ isTokenValid: false });
+            resolve({ success: false });
           } else {
             // Failed: Show error message or handle failure
             // Could add a toast notification here
