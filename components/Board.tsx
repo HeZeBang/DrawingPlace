@@ -72,7 +72,9 @@ const Board = () => {
     if (settingsConfig.showGuideOnLoad) {
       setShowGuideModal(true);
     }
-    if (settingsConfig.announcementVersion !== process.env.NEXT_PUBLIC_APP_VERSION) {
+    if (
+      settingsConfig.announcementVersion !== process.env.NEXT_PUBLIC_APP_VERSION
+    ) {
       setShowAnnounce(true);
       // updateSettingsConfig({ announcementVersion: process.env.NEXT_PUBLIC_ANNOUNCEMENT_VERSION || "" });
     }
@@ -538,11 +540,15 @@ const Board = () => {
         <AnnounceModal
           isOpen={showAnnounce}
           onClickBtn={() => {
-            updateSettingsConfig({ announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "" });
+            updateSettingsConfig({
+              announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "",
+            });
             setShowAnnounce(false);
           }}
           onClose={() => {
-            updateSettingsConfig({ announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "" });
+            updateSettingsConfig({
+              announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "",
+            });
             setShowAnnounce(false);
           }}
         />

@@ -63,7 +63,7 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     description: "当前应用公告的版本号",
     // isHidden: true,
     displayType: "string",
-  }
+  },
 };
 
 export const defaultSettingsConfig: SettingsConfig = {
