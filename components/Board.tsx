@@ -28,6 +28,7 @@ import { useSettingsConfigContext } from "./SettingsProvider";
 import { ViewMode } from "@/lib/frontend-settings";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import AnnounceModal from "./AnnounceModal";
 
 const Board = () => {
   const { config } = useRuntimeConfigContext();
@@ -43,6 +44,7 @@ const Board = () => {
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showAnnounce, setShowAnnounce] = useState(false);
   const [title, setTitle] = useState("Drawing Place");
   const {
     points: pointsLeft,
@@ -69,6 +71,10 @@ const Board = () => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
     if (settingsConfig.showGuideOnLoad) {
       setShowGuideModal(true);
+    }
+    if (settingsConfig.announcementVersion !== process.env.NEXT_PUBLIC_APP_VERSION) {
+      setShowAnnounce(true);
+      // updateSettingsConfig({ announcementVersion: process.env.NEXT_PUBLIC_ANNOUNCEMENT_VERSION || "" });
     }
     setToken(localStorage.getItem("draw_token") || "");
   }, []);
@@ -529,6 +535,17 @@ const Board = () => {
             setShowGuideModal(false);
           }}
         />
+        <AnnounceModal
+          isOpen={showAnnounce}
+          onClickBtn={() => {
+            updateSettingsConfig({ announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "" });
+            setShowAnnounce(false);
+          }}
+          onClose={() => {
+            updateSettingsConfig({ announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "" });
+            setShowAnnounce(false);
+          }}
+        />
         <div className="absolute bottom-4 mx-auto flex gap-3">
           <Button
             variant="outline"
@@ -602,6 +619,15 @@ const Board = () => {
                 }}
               >
                 使用说明
+              </a>
+              <a
+                href="#"
+                className="underline hover:text-foreground"
+                onClick={() => {
+                  setShowAnnounce(true);
+                }}
+              >
+                更新公告
               </a>
               <a
                 href="https://github.com/HeZeBang/DrawingPlace"

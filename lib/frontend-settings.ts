@@ -8,6 +8,7 @@ export interface SettingsConfig {
   yAutoDraw: number; // Y coordinate for auto-draw start
   dataAutoDraw?: string; // Image data for auto-draw
   progressAutoDraw?: number; // Number of pixels drawn by auto-draw
+  announcementVersion?: string; // Version of the current announcement
 }
 
 export interface SettingsEntry {
@@ -29,9 +30,8 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     displayType: "boolean",
   },
   startAutoDraw: {
-    label: "启动自动绘图",
+    label: "自动绘图",
     description: "开启后，应用将自动根据上传的图片进行绘图",
-    isHidden: true,
     displayType: "boolean",
   },
   xAutoDraw: {
@@ -58,6 +58,12 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     isHidden: true,
     displayType: "number",
   },
+  announcementVersion: {
+    label: "公告版本",
+    description: "当前应用公告的版本号",
+    // isHidden: true,
+    displayType: "string",
+  }
 };
 
 export const defaultSettingsConfig: SettingsConfig = {
