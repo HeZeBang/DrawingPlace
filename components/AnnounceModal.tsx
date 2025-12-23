@@ -136,7 +136,7 @@ const AnnounceModal = ({
               版本更新公告 v{process.env.NEXT_PUBLIC_APP_VERSION}
             </DialogTitle>
             <DialogDescription>
-              你可以随时在页面底部点击“使用说明”再次查看本次更新公告。
+              你可以随时在页面底部点击“更新公告”再次查看本次更新公告。
             </DialogDescription>
           </DialogHeader>
           <AnnounceContent />
