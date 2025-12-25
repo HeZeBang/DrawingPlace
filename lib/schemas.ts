@@ -13,7 +13,7 @@ export const DrawDataSchema = z.object({
 });
 
 export const DrawRequestSchema = z.object({
-  token: z.string().min(1),
+  token: z.string().optional(),
   data: DrawDataSchema,
 });
 
