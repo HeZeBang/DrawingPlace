@@ -115,9 +115,7 @@ const Board = () => {
           if (since > 0) {
             // Incremental update
             const deltaPoints = [...data.points, ...buffered];
-            // Append to pointsRef (optional, depending on if you need full history in memory)
             pointsRef.current.push(...deltaPoints);
-            // Draw only new points
             deltaPoints.forEach(p => canvasRef.current?.drawPoint(p));
           } else {
             // Full load
@@ -130,14 +128,19 @@ const Board = () => {
           setDelay(data.delay || config.DRAW_DELAY_MS);
           lastActionCountRef.current = data.actionCount;
           
+          // Critical: Stop buffering and clear buffer synchronously to prevent race conditions
+          isFetchingRef.current = false;
+          bufferRef.current = [];
+
           return {
             pointCount: data.points.length,
             actionCount: data.actionCount,
           };
         })
-        .finally(() => {
+        .catch((err) => {
+          // Only stop fetching on error, keep buffer? For now, we disable fetching flag so live events can resume.
           isFetchingRef.current = false;
-          bufferRef.current = [];
+          throw err;
         });
 
       toast.promise(fetchPromise, {
