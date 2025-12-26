@@ -10,6 +10,7 @@ import Action from "./models/Action";
 import UserSession from "./models/UserSession";
 import { AppError, AppErrorCode } from "./lib/err";
 import { DrawRequestSchema } from "./lib/schemas";
+import { isExpired } from "./lib/utils";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -308,6 +309,15 @@ app.prepare().then(async () => {
     }
 
     socket.on("draw", async (params, cb: (result: AppError) => void) => {
+      if (isExpired()) {
+        if (cb)
+          cb({
+            code: AppErrorCode.Expired,
+            message: "Service expired",
+          });
+        return;
+      }
+
       const userId = socket.data.userId;
 
       if (!userId) {
