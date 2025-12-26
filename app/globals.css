@@ -66,3 +66,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+.bg-checkerboard {
+  background-color: #ffffff;
+  background-image: conic-gradient(
+    #e5e7eb 90deg,
+    transparent 90deg 180deg,
+    #e5e7eb 180deg 270deg,
+    transparent 270deg
+  );
+  background-size: 20px 20px;
+}

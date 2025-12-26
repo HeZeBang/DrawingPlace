@@ -8,6 +8,7 @@ export interface SettingsConfig {
   yAutoDraw: number; // Y coordinate for auto-draw start
   dataAutoDraw?: string; // Image data for auto-draw
   progressAutoDraw?: number; // Number of pixels drawn by auto-draw
+  ignoreTransparentAutoDraw?: boolean; // Whether to ignore transparent pixels in auto-draw
   announcementVersion?: string; // Version of the current announcement
 }
 
@@ -58,6 +59,12 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     isHidden: true,
     displayType: "number",
   },
+  ignoreTransparentAutoDraw: {
+    label: "忽略透明像素",
+    description: "自动绘图时是否忽略透明像素",
+    isHidden: true,
+    displayType: "boolean",
+  },
   announcementVersion: {
     label: "公告版本",
     description: "当前应用公告的版本号",
@@ -72,6 +79,7 @@ export const defaultSettingsConfig: SettingsConfig = {
   startAutoDraw: false,
   xAutoDraw: -1,
   yAutoDraw: -1,
+  ignoreTransparentAutoDraw: true,
 };
 
 // Frontend status interface and entries

@@ -10,6 +10,7 @@ export const extractPixels = (
   dataUrl: string,
   startX: number,
   startY: number,
+  ignoreTransparent: boolean = true,
 ): Promise<AutoDrawPixel[]> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -33,7 +34,9 @@ export const extractPixels = (
           const r = imageData.data[index];
           const g = imageData.data[index + 1];
           const b = imageData.data[index + 2];
-          // Alpha is ignored as we expect opaque image or treat as opaque
+          const a = imageData.data[index + 3];
+
+          if (ignoreTransparent && a === 0) continue;
 
           const hex =
             "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);

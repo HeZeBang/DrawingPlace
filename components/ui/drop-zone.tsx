@@ -38,10 +38,7 @@ const PixelCanvas = ({
       canvas.height = finalHeight;
       ctx.imageSmoothingEnabled = false;
 
-      // Fill white background to ensure opacity
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, finalWidth, finalHeight);
-
+      ctx.clearRect(0, 0, finalWidth, finalHeight);
       ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
 
       const dataUrl = canvas.toDataURL("image/png");
@@ -52,7 +49,7 @@ const PixelCanvas = ({
   return (
     <canvas
       ref={canvasRef}
-      className="h-full w-full object-contain rounded-md border border-border bg-black/5"
+      className="h-full w-full object-contain rounded-md border border-border bg-checkerboard"
       style={{ imageRendering: "pixelated" }}
     />
   );

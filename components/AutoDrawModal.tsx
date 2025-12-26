@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { extractPixels, AutoDrawPixel } from "@/lib/auto-draw";
 import { AutoDrawProgress } from "./AutoDrawProgress";
 import { BotOff } from "lucide-react";
+import { Switch } from "./ui/switch";
 
 const AutoDrawModal = ({
   children,
@@ -48,6 +49,7 @@ const AutoDrawModal = ({
   const { config, updateConfig } = useSettingsConfigContext();
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
+  const [ignoreTransparent, setIgnoreTransparent] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [pixels, setPixels] = useState<AutoDrawPixel[]>([]);
   const [eta, setEta] = useState(0);
@@ -56,7 +58,9 @@ const AutoDrawModal = ({
   useEffect(() => {
     if (config.xAutoDraw >= 0) setStartX(config.xAutoDraw);
     if (config.yAutoDraw >= 0) setStartY(config.yAutoDraw);
-  }, [config.xAutoDraw, config.yAutoDraw]);
+    if (config.ignoreTransparentAutoDraw !== undefined)
+      setIgnoreTransparent(config.ignoreTransparentAutoDraw);
+  }, [config.xAutoDraw, config.yAutoDraw, config.ignoreTransparentAutoDraw]);
 
   // Auto draw loop
   useEffect(() => {
@@ -77,6 +81,7 @@ const AutoDrawModal = ({
             config.dataAutoDraw,
             config.xAutoDraw,
             config.yAutoDraw,
+            config.ignoreTransparentAutoDraw ?? true,
           );
           setPixels(currentPixels);
         } catch (e) {
@@ -173,6 +178,7 @@ const AutoDrawModal = ({
       yAutoDraw: startY,
       dataAutoDraw: originalPictureUrl,
       progressAutoDraw: 0,
+      ignoreTransparentAutoDraw: ignoreTransparent,
     });
 
     // Force reload pixels on new draw
@@ -202,6 +208,14 @@ const AutoDrawModal = ({
             onChange={(e) => setStartY(Number(e.target.value))}
           />
         </div>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="ignore-transparent"
+          checked={ignoreTransparent}
+          onCheckedChange={setIgnoreTransparent}
+        />
+        <Label htmlFor="ignore-transparent">忽略透明像素</Label>
       </div>
       <Button className="w-full" onClick={handleStart}>
         开始绘图
