@@ -27,6 +27,8 @@ const schema = new Schema<IPoint>(
   },
 );
 
+schema.index({ x: 1, y: 1 }, { unique: true });
+
 const Point: Model<IPoint> =
   mongoose.models.Point || mongoose.model<IPoint>("Point", schema);
 export default Point;

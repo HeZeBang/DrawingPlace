@@ -21,7 +21,7 @@ const Canvas = forwardRef(
     const drawPoint = (ctx: CanvasRenderingContext2D, p: any) => {
       if (!p) return;
       ctx.fillStyle = p.c;
-      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillRect(p.x, p.y, p.w || 1, p.h || 1);
     };
 
     useImperativeHandle(ref, () => ({

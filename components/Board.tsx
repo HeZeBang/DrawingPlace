@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { AppError, AppErrorCode } from "@/lib/err";
 import GuideModal from "./GuideModal";
 import { useBackpack } from "@/lib/use-backpack";
-import { DrawRequestSchema } from "@/lib/schemas";
+import { DrawRequestSchema, PlaceResponseSchema } from "@/lib/schemas";
 import { useSettingsConfigContext } from "./SettingsProvider";
 import { ViewMode } from "@/lib/frontend-settings";
 import { Button } from "./ui/button";
@@ -101,8 +101,9 @@ const Board = () => {
       isFetchingRef.current = true;
       bufferRef.current = [];
 
-      const fetchPromise = fetch("/api/place")
+      const fetchPromise = fetch("/api/v2/place")
         .then((res) => res.json())
+        .then((json) => PlaceResponseSchema.parseAsync(json))
         .then((res) => {
           if (res.status) {
             const buffered = bufferRef.current;
@@ -111,9 +112,10 @@ const Board = () => {
             canvasRef.current?.init(newPoints);
             setColors(res.data.colors);
             setDelay(res.data.delay || config.DRAW_DELAY_MS);
-            return { pointCount: newPoints.length };
+            return { pointCount: newPoints.length, actionCount: res.data.actionCount };
+          } else {
+            throw new Error(res.error || "Failed to fetch data");
           }
-          throw new Error("Failed to fetch data");
         })
         .finally(() => {
           isFetchingRef.current = false;
@@ -122,13 +124,12 @@ const Board = () => {
 
       toast.promise(fetchPromise, {
         loading: "加载画板数据中...",
-        success: (data) => `已加载 ${data.pointCount} 个绘制点`,
-        error: "画板数据加载失败",
-      });
+        success: (data) => `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
+        error: (err) => `画板数据加载失败: ${err.message}`,
+      }).unwrap();
     };
 
-    // Load initial data
-    fetchData();
+    // Load initial data is disabled, we only load on socket connect
 
     // Connect socket
     if (!token || token.length === 0) {
