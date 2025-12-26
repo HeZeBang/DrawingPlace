@@ -308,8 +308,6 @@ app.prepare().then(async () => {
     }
 
     socket.on("draw", async (params, cb: (result: AppError) => void) => {
-      // 🟢 修复 7: 直接使用 socket.data.userId，不再重复查询数据库
-      // 这里的 userId 是受信的，由中间件设置
       const userId = socket.data.userId;
 
       if (!userId) {

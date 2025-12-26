@@ -29,6 +29,7 @@ import { ViewMode } from "@/lib/frontend-settings";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import AnnounceModal from "./AnnounceModal";
+import { parseInitData } from "@/lib/binary-parser";
 
 const Board = () => {
   const { config } = useRuntimeConfigContext();
@@ -96,26 +97,27 @@ const Board = () => {
         console.error("Invalid user data");
       }
     }
-
     const fetchData = () => {
       isFetchingRef.current = true;
       bufferRef.current = [];
 
-      const fetchPromise = fetch("/api/v2/place")
-        .then((res) => res.json())
-        .then((json) => PlaceResponseSchema.parseAsync(json))
+      const fetchPromise = fetch("/api/v2/init")
         .then((res) => {
-          if (res.status) {
-            const buffered = bufferRef.current;
-            const newPoints = [...res.data.points, ...buffered];
-            pointsRef.current = newPoints;
-            canvasRef.current?.init(newPoints);
-            setColors(res.data.colors);
-            setDelay(res.data.delay || config.DRAW_DELAY_MS);
-            return { pointCount: newPoints.length, actionCount: res.data.actionCount };
-          } else {
-            throw new Error(res.error || "Failed to fetch data");
-          }
+          if (!res.ok) throw new Error("Failed to fetch data");
+          return res.arrayBuffer();
+        })
+        .then((buffer) => parseInitData(buffer))
+        .then((data) => {
+          const buffered = bufferRef.current;
+          const newPoints = [...data.points, ...buffered];
+          pointsRef.current = newPoints;
+          canvasRef.current?.init(newPoints);
+          setColors(data.colors);
+          setDelay(data.delay || config.DRAW_DELAY_MS);
+          return {
+            pointCount: newPoints.length,
+            actionCount: data.actionCount,
+          };
         })
         .finally(() => {
           isFetchingRef.current = false;
@@ -124,7 +126,8 @@ const Board = () => {
 
       toast.promise(fetchPromise, {
         loading: "加载画板数据中...",
-        success: (data) => `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
+        success: (data) =>
+          `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
         error: (err) => `画板数据加载失败: ${err.message}`,
       }).unwrap();
     };
