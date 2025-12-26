@@ -111,12 +111,12 @@ const Board = () => {
         .then((buffer) => parseInitData(buffer))
         .then((data) => {
           const buffered = bufferRef.current;
-          
+
           if (since > 0) {
             // Incremental update
             const deltaPoints = [...data.points, ...buffered];
             pointsRef.current.push(...deltaPoints);
-            deltaPoints.forEach(p => canvasRef.current?.drawPoint(p));
+            deltaPoints.forEach((p) => canvasRef.current?.drawPoint(p));
           } else {
             // Full load
             const newPoints = [...data.points, ...buffered];
@@ -127,7 +127,7 @@ const Board = () => {
           setColors(data.colors);
           setDelay(data.delay || config.DRAW_DELAY_MS);
           lastActionCountRef.current = data.actionCount;
-          
+
           // Critical: Stop buffering and clear buffer synchronously to prevent race conditions
           isFetchingRef.current = false;
           bufferRef.current = [];
@@ -143,14 +143,16 @@ const Board = () => {
           throw err;
         });
 
-      toast.promise(fetchPromise, {
-        loading: since > 0 ? "同步增量数据..." : "加载画板数据中...",
-        success: (data) =>
-          since > 0 
-            ? `已同步 ${data.pointCount} 个新操作`
-            : `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
-        error: (err) => `画板数据加载失败: ${err.message}`,
-      }).unwrap();
+      toast
+        .promise(fetchPromise, {
+          loading: since > 0 ? "同步增量数据..." : "加载画板数据中...",
+          success: (data) =>
+            since > 0
+              ? `已同步 ${data.pointCount} 个新操作`
+              : `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
+          error: (err) => `画板数据加载失败: ${err.message}`,
+        })
+        .unwrap();
     };
 
     // Load initial data is disabled, we only load on socket connect

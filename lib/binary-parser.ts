@@ -28,7 +28,7 @@ export function parseInitData(buffer: ArrayBuffer): ParsedInitData {
     const g = view.getUint8(offset++);
     const b = view.getUint8(offset++);
     colors.push(
-      `${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
+      `${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`,
     );
   }
 
@@ -38,7 +38,7 @@ export function parseInitData(buffer: ArrayBuffer): ParsedInitData {
 
   // 6. Points
   const points: { x: number; y: number; c: string }[] = [];
-  
+
   for (let i = 0; i < pointsCount; i++) {
     const x = view.getUint16(offset, true);
     offset += 2;

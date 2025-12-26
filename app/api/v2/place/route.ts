@@ -63,13 +63,11 @@ export async function GET() {
             : 5,
           actionCount,
         },
-      }
-      ));
+      }),
+    );
   } catch (error) {
     return NextResponse.json(
-      PlaceResponseSchema.parse(
-        { status: false, error: error.message }
-      ),
+      PlaceResponseSchema.parse({ status: false, error: error.message }),
       { status: 500 },
     );
   }
