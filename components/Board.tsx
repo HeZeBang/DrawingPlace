@@ -67,6 +67,7 @@ const Board = () => {
   const isFetchingRef = useRef(false);
   const bufferRef = useRef<any[]>([]);
   const socketRef = useRef(null);
+  const lastActionCountRef = useRef(0);
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
@@ -100,8 +101,9 @@ const Board = () => {
     const fetchData = () => {
       isFetchingRef.current = true;
       bufferRef.current = [];
+      const since = lastActionCountRef.current;
 
-      const fetchPromise = fetch("/api/v2/init")
+      const fetchPromise = fetch(`/api/v2/init?since=${since}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to fetch data");
           return res.arrayBuffer();
@@ -109,13 +111,27 @@ const Board = () => {
         .then((buffer) => parseInitData(buffer))
         .then((data) => {
           const buffered = bufferRef.current;
-          const newPoints = [...data.points, ...buffered];
-          pointsRef.current = newPoints;
-          canvasRef.current?.init(newPoints);
+          
+          if (since > 0) {
+            // Incremental update
+            const deltaPoints = [...data.points, ...buffered];
+            // Append to pointsRef (optional, depending on if you need full history in memory)
+            pointsRef.current.push(...deltaPoints);
+            // Draw only new points
+            deltaPoints.forEach(p => canvasRef.current?.drawPoint(p));
+          } else {
+            // Full load
+            const newPoints = [...data.points, ...buffered];
+            pointsRef.current = newPoints;
+            canvasRef.current?.init(newPoints);
+          }
+
           setColors(data.colors);
           setDelay(data.delay || config.DRAW_DELAY_MS);
+          lastActionCountRef.current = data.actionCount;
+          
           return {
-            pointCount: newPoints.length,
+            pointCount: data.points.length,
             actionCount: data.actionCount,
           };
         })
@@ -125,9 +141,11 @@ const Board = () => {
         });
 
       toast.promise(fetchPromise, {
-        loading: "加载画板数据中...",
+        loading: since > 0 ? "同步增量数据..." : "加载画板数据中...",
         success: (data) =>
-          `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
+          since > 0 
+            ? `已同步 ${data.pointCount} 个新操作`
+            : `已加载 ${data.pointCount} 个绘制点，${data.actionCount} 次操作`,
         error: (err) => `画板数据加载失败: ${err.message}`,
       }).unwrap();
     };

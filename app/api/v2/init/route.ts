@@ -1,12 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Point from "@/models/Point";
 import Action from "@/models/Action";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   await dbConnect();
+
+  const url = new URL(req.url);
+  const since = parseInt(url.searchParams.get("since") || "0");
 
   const colors = [
     "000000", "ffffff", "aaaaaa", "555555", "fed3c7", "ffc4ce", "faac8e", "ff8b83",
@@ -14,11 +17,36 @@ export async function GET() {
     "2196f3", "00bcd4", "3be5db", "97fddc", "167300", "37a93c", "89e642", "d7ff07",
     "fff6d1", "f8cb8c", "ffeb3b", "ffc107", "ff9800", "ff5722", "b83f27", "795548",
   ];
-
   try {
-    const rawPoints = await Point.find({}).select("x y c").lean();
     const actionCount = await Action.countDocuments();
     const delay = process.env.DRAW_DELAY_MS ? parseInt(process.env.DRAW_DELAY_MS) / 1000 : 5;
+
+    let points: { x: number; y: number; c: string }[] = [];
+
+    if (since > 0) {
+      // Incremental update
+      // Note: skip() can be slow for large datasets, but it's the only way without a sequence ID
+      const actions = await Action.find().sort({ _id: 1 }).skip(since).lean();
+      
+      const pointMap = new Map<string, { x: number; y: number; c: string }>();
+      for (const action of actions) {
+        if (action.point) {
+          // Ensure we handle both raw objects and potential mongoose docs (though lean() returns objects)
+          const p = action.point;
+          // Key by coordinates to deduplicate, keeping the latest action
+          pointMap.set(`${p.x},${p.y}`, { x: p.x, y: p.y, c: p.c });
+        }
+      }
+      points = Array.from(pointMap.values());
+    } else {
+      // Full load
+      const rawPoints = await Point.find({}).select("x y c").lean();
+      points = rawPoints.map((p) => ({
+        x: p.x,
+        y: p.y,
+        c: p.c,
+      }));
+    }
 
     // Calculate buffer size
     // Header: 
@@ -28,7 +56,7 @@ export async function GET() {
     const paletteSize = colors.length;
     const headerSize = 4 + 4 + 1 + (paletteSize * 3) + 4;
     const pointSize = 7;
-    const totalSize = headerSize + (rawPoints.length * pointSize);
+    const totalSize = headerSize + (points.length * pointSize);
 
     const buffer = Buffer.alloc(totalSize);
     let offset = 0;
@@ -56,11 +84,11 @@ export async function GET() {
     }
 
     // 5. Points Count (Uint32)
-    buffer.writeUInt32LE(rawPoints.length, offset);
+    buffer.writeUInt32LE(points.length, offset);
     offset += 4;
 
     // 6. Points
-    for (const p of rawPoints) {
+    for (const p of points) {
       buffer.writeUInt16LE(p.x, offset);
       offset += 2;
       buffer.writeUInt16LE(p.y, offset);
@@ -87,7 +115,6 @@ export async function GET() {
         'Cache-Control': 'no-store, max-age=0',
       },
     });
-
   } catch (error) {
     console.error("Error in v2/init:", error);
     return NextResponse.json(
