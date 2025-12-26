@@ -532,7 +532,7 @@ const Board = () => {
                 }
               />
               {settingsConfig.useOverlay && (
-                <div
+                <rect
                   className={cn(
                     "h-[1px] w-[1px] pointer-events-none z-10 absolute ring-[0.1px] ring-black ring-offset-[0.1px]",
                     editable ? "animate-pulse" : "opacity-50",
@@ -542,6 +542,7 @@ const Board = () => {
                     top: location.y + 1,
                     backgroundColor:
                       (editable && selectedColor) || "transparent",
+                    shapeRendering: "crispEdges",
                   }}
                 />
               )}
