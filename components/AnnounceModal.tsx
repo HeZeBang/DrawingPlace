@@ -37,6 +37,7 @@ const AnnounceContent = () => {
           <s>修复已知问题、提升用户体验。</s>
         </li>
         <li>背包容量缩小至 64，冷却时间提升至 5 秒。</li>
+        <li>自动绘图支持跳过纯透明像素。</li>
         <li>
           现在新的 API 允许你省略 <code>h</code>, <code>w</code>，
           <code>token</code>参数。
@@ -141,7 +142,7 @@ const AnnounceModal = ({
             版本更新公告 v{process.env.NEXT_PUBLIC_APP_VERSION}
           </DrawerTitle>
           <DrawerDescription>
-            你可以随时在页面底部点击版本号再次查看本次更新公告。
+            你可以随时在页面底部点击“更新公告”再次查看本次更新公告。
           </DrawerDescription>
         </DrawerHeader>
         <AnnounceContent />
