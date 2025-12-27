@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import AnnounceModal from "./AnnounceModal";
 import { parseInitData } from "@/lib/binary-parser";
+import DanmakuPlayer from "./Danmaku";
 
 const Board = () => {
   const { config } = useRuntimeConfigContext();
@@ -496,118 +497,120 @@ const Board = () => {
       </div>
 
       {/* Canvas Area - Flexible */}
-      <div className="flex-1 overflow-hidden relative bg-muted/20 flex items-center justify-center">
-        <TransformWrapper
-          initialScale={1}
-          minScale={0.3}
-          maxScale={20}
-          centerOnInit={true}
-          smooth={false}
-          wheel={{ step: ratio * 0.1, touchPadDisabled: false }}
-          panning={{
-            allowLeftClickPan: editable ? false : true,
-            allowMiddleClickPan: true,
-            allowRightClickPan: true,
-          }} // Middle or Right click to pan
-          onTransformed={(e) => setRatio(e.state.scale)}
-          doubleClick={{ disabled: true }}
-        >
-          <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
-            <div
-              className="bg-background shadow-2xl border border-border"
-              style={{
-                backgroundImage:
-                  statusConfig.currentViewMode !== ViewMode.CanvasOnly
-                    ? `url(/map.png)`
-                    : undefined,
-                imageRendering: ratio > 1 ? "pixelated" : "auto",
+      <DanmakuPlayer>
+        <div className="h-full w-full overflow-hidden relative bg-muted/20 flex items-center justify-center">
+          <TransformWrapper
+            initialScale={1}
+            minScale={0.3}
+            maxScale={20}
+            centerOnInit={true}
+            smooth={false}
+            wheel={{ step: ratio * 0.1, touchPadDisabled: false }}
+            panning={{
+              allowLeftClickPan: editable ? false : true,
+              allowMiddleClickPan: true,
+              allowRightClickPan: true,
+            }} // Middle or Right click to pan
+            onTransformed={(e) => setRatio(e.state.scale)}
+            doubleClick={{ disabled: true }}
+          >
+            <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+              <div
+                className="bg-background shadow-2xl border border-border"
+                style={{
+                  backgroundImage:
+                    statusConfig.currentViewMode !== ViewMode.CanvasOnly
+                      ? `url(/map.png)`
+                      : undefined,
+                  imageRendering: ratio > 1 ? "pixelated" : "auto",
+                }}
+              >
+                <Canvas
+                  ref={canvasRef}
+                  color={selectedColor}
+                  onMove={handleMove}
+                  onDraw={handleDraw}
+                  editable={pointsLeft > 0 && editable}
+                  opacity={
+                    statusConfig.currentViewMode !== ViewMode.MapOnly ? "1" : "0"
+                  }
+                />
+                {settingsConfig.useOverlay && (
+                  <rect
+                    className={cn(
+                      "h-[1px] w-[1px] pointer-events-none z-10 absolute ring-[0.1px] ring-black ring-offset-[0.1px]",
+                      editable ? "animate-pulse" : "opacity-50",
+                    )}
+                    style={{
+                      left: location.x + 1,
+                      top: location.y + 1,
+                      backgroundColor:
+                        (editable && selectedColor) || "transparent",
+                      shapeRendering: "crispEdges",
+                    }}
+                  />
+                )}
+              </div>
+            </TransformComponent>
+          </TransformWrapper>
+          <LoginModal
+            isOpen={showLoginModal}
+            onClickBtn={handleLogin}
+            onClose={() => setShowLoginModal(false)}
+          />
+          <GuideModal
+            isOpen={showGuideModal}
+            onClickBtn={() => {
+              updateSettingsConfig({ showGuideOnLoad: false });
+              setShowGuideModal(false);
+            }}
+            onClose={() => {
+              updateSettingsConfig({ showGuideOnLoad: false });
+              setShowGuideModal(false);
+            }}
+          />
+          <AnnounceModal
+            isOpen={showAnnounce}
+            onClickBtn={() => {
+              updateSettingsConfig({
+                announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "",
+              });
+              setShowAnnounce(false);
+            }}
+            onClose={() => {
+              updateSettingsConfig({
+                announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "",
+              });
+              setShowAnnounce(false);
+            }}
+          />
+          <div className="absolute bottom-4 mx-auto flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "w-fit h-8 rounded-full px-3 border-none transition-all duration-500",
+                editable ? "" : "opacity-30",
+                "hover:opacity-100 delay-1000 hover:delay-0",
+              )}
+              onClick={() => {
+                setEditable((val) => !val);
               }}
             >
-              <Canvas
-                ref={canvasRef}
-                color={selectedColor}
-                onMove={handleMove}
-                onDraw={handleDraw}
-                editable={pointsLeft > 0 && editable}
-                opacity={
-                  statusConfig.currentViewMode !== ViewMode.MapOnly ? "1" : "0"
-                }
-              />
-              {settingsConfig.useOverlay && (
-                <rect
-                  className={cn(
-                    "h-[1px] w-[1px] pointer-events-none z-10 absolute ring-[0.1px] ring-black ring-offset-[0.1px]",
-                    editable ? "animate-pulse" : "opacity-50",
-                  )}
-                  style={{
-                    left: location.x + 1,
-                    top: location.y + 1,
-                    backgroundColor:
-                      (editable && selectedColor) || "transparent",
-                    shapeRendering: "crispEdges",
-                  }}
-                />
+              {editable ? (
+                <Brush className="h-4 w-4" />
+              ) : (
+                <View className="h-4 w-4" />
               )}
-            </div>
-          </TransformComponent>
-        </TransformWrapper>
-        <LoginModal
-          isOpen={showLoginModal}
-          onClickBtn={handleLogin}
-          onClose={() => setShowLoginModal(false)}
-        />
-        <GuideModal
-          isOpen={showGuideModal}
-          onClickBtn={() => {
-            updateSettingsConfig({ showGuideOnLoad: false });
-            setShowGuideModal(false);
-          }}
-          onClose={() => {
-            updateSettingsConfig({ showGuideOnLoad: false });
-            setShowGuideModal(false);
-          }}
-        />
-        <AnnounceModal
-          isOpen={showAnnounce}
-          onClickBtn={() => {
-            updateSettingsConfig({
-              announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "",
-            });
-            setShowAnnounce(false);
-          }}
-          onClose={() => {
-            updateSettingsConfig({
-              announcementVersion: process.env.NEXT_PUBLIC_APP_VERSION || "",
-            });
-            setShowAnnounce(false);
-          }}
-        />
-        <div className="absolute bottom-4 mx-auto flex gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "w-fit h-8 rounded-full px-3 border-none transition-all duration-500",
-              editable ? "" : "opacity-30",
-              "hover:opacity-100 delay-1000 hover:delay-0",
-            )}
-            onClick={() => {
-              setEditable((val) => !val);
-            }}
-          >
-            {editable ? (
-              <Brush className="h-4 w-4" />
-            ) : (
-              <View className="h-4 w-4" />
-            )}
-            {editable ? (
-              <span className="">绘制模式</span>
-            ) : (
-              <span className="">浏览模式</span>
-            )}
-          </Button>
+              {editable ? (
+                <span className="">绘制模式</span>
+              ) : (
+                <span className="">浏览模式</span>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      </DanmakuPlayer>
 
       {/* Bottom Control Area */}
       <div className="bg-card border-t p-4 z-10 shrink-0">
