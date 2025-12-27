@@ -55,7 +55,7 @@ export const useBackpack = (initialPoints, maxPoints, delayTimeMs) => {
   }, []);
 
   return {
-    points: currentPoints,
+    points: Math.max(currentPoints, 0),
     nextRecoverIn,
     consumePoint,
     syncFromServer,
