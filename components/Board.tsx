@@ -99,6 +99,7 @@ const Board = () => {
       }
     }
     const fetchData = () => {
+      if (isFetchingRef.current) return;
       isFetchingRef.current = true;
       bufferRef.current = [];
       const since = lastActionCountRef.current;
@@ -155,7 +156,8 @@ const Board = () => {
         .unwrap();
     };
 
-    // Load initial data is disabled, we only load on socket connect
+    // Load initial data
+    fetchData();
 
     // Connect socket
     if (!token || token.length === 0) {
