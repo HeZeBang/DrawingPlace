@@ -9,6 +9,7 @@ export interface SettingsConfig {
   dataAutoDraw?: string; // Image data for auto-draw
   progressAutoDraw?: number; // Number of pixels drawn by auto-draw
   ignoreTransparentAutoDraw?: boolean; // Whether to ignore transparent pixels in auto-draw
+  enableDanmaku?: boolean; // Whether to enable danmaku
   announcementVersion?: string; // Version of the current announcement
 }
 
@@ -65,6 +66,11 @@ export const SettingsEntries: Record<keyof SettingsConfig, SettingsEntry> = {
     isHidden: true,
     displayType: "boolean",
   },
+  enableDanmaku: {
+    label: "开启弹幕",
+    description: "是否显示实时弹幕",
+    displayType: "boolean",
+  },
   announcementVersion: {
     label: "公告版本",
     description: "当前应用公告的版本号",
@@ -80,6 +86,7 @@ export const defaultSettingsConfig: SettingsConfig = {
   xAutoDraw: -1,
   yAutoDraw: -1,
   ignoreTransparentAutoDraw: true,
+  enableDanmaku: true,
 };
 
 // Frontend status interface and entries
@@ -96,6 +103,7 @@ export interface FrontendStatus {
   isTokenValid: boolean;
   isLoggedIn: boolean;
   onlineClients: number;
+  isDanmakuConnected: boolean;
   currentViewMode: ViewMode;
   // totalActions: number;
   // totalUsers: number;
@@ -107,6 +115,7 @@ export const defaultFrontendStatus: FrontendStatus = {
   isTokenValid: false,
   isLoggedIn: false,
   onlineClients: 0,
+  isDanmakuConnected: false,
   currentViewMode: ViewMode.Mix,
   // totalActions: 0,
   // totalUsers: 0,
@@ -144,6 +153,11 @@ export const StatusEntries: Record<keyof FrontendStatus, StatusEntry> = {
   onlineClients: {
     label: "当前在线",
     // description: "当前正在使用应用的在线客户端数量",
+  },
+  isDanmakuConnected: {
+    label: "弹幕连接",
+    description: "是否已连接到弹幕服务器",
+    mapFunction: (value: boolean) => (value ? "已连接" : "未连接"),
   },
   // totalActions: {
   //   label: "总落笔数",

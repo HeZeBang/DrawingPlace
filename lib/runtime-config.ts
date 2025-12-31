@@ -58,6 +58,31 @@ export const getRuntimeConfig = () => {
         "300",
       10,
     ),
+
+    DANMAKU_ACTIVITY_ID:
+      process.env.DANMAKU_ACTIVITY_ID ||
+      process.env.NEXT_PUBLIC_DANMAKU_ACTIVITY_ID ||
+      "demo",
+
+    DANMAKU_TOKEN_NAME:
+      process.env.DANMAKU_TOKEN_NAME ||
+      process.env.NEXT_PUBLIC_DANMAKU_TOKEN_NAME ||
+      "audit",
+
+    DANMAKU_TOKEN:
+      process.env.DANMAKU_TOKEN ||
+      process.env.NEXT_PUBLIC_DANMAKU_TOKEN ||
+      "audit",
+
+    DANMAKU_ROOT_PATH:
+      process.env.DANMAKU_ROOT_PATH ||
+      process.env.NEXT_PUBLIC_DANMAKU_ROOT_PATH ||
+      "https://danmaku.geekpie.club",
+
+    DANMAKU_SOCKET_PATH:
+      process.env.DANMAKU_SOCKET_PATH ||
+      process.env.NEXT_PUBLIC_DANMAKU_SOCKET_PATH ||
+      "/socket.io",
   };
 };
 
@@ -72,4 +97,9 @@ export interface RuntimeConfig {
   DRAW_MAX_POINTS: number;
   CANVAS_WIDTH: number;
   CANVAS_HEIGHT: number;
+  DANMAKU_ACTIVITY_ID: string;
+  DANMAKU_TOKEN_NAME: string;
+  DANMAKU_TOKEN: string;
+  DANMAKU_ROOT_PATH: string;
+  DANMAKU_SOCKET_PATH: string;
 }
