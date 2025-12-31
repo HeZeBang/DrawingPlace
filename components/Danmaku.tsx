@@ -3,20 +3,21 @@
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { CommentManager } from '@wiidede/comment-core-library';
 import io, { Socket } from 'socket.io-client';
-import 'comment-core-library/dist/css/style.css'; 
+import confetti from "canvas-confetti";
+import 'comment-core-library/dist/css/style.css';
 import { useSettingsConfigContext } from "./SettingsProvider";
 import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
 import { toast } from 'sonner';
 
 export interface RawDanmakuData {
-  id?: number;
-  text: string;
-  mode: number;
-  size: number;
-  color: number;
-  time: number;
-  dur?: number;
-  addons?: Record<string, any>;
+    id?: number;
+    text: string;
+    mode: number;
+    size: number;
+    color: number;
+    time: number;
+    dur?: number;
+    addons?: Record<string, any>;
 }
 
 export interface DanmakuHandle {
@@ -24,18 +25,18 @@ export interface DanmakuHandle {
 }
 
 interface DanmakuPlayerProps {
-  children: React.ReactNode;
-  activityId?: string;
-  tokenName?: string;
-  token?: string;
-  rootPath?: string;
-  socketPath?: string;
+    children: React.ReactNode;
+    activityId?: string;
+    tokenName?: string;
+    token?: string;
+    rootPath?: string;
+    socketPath?: string;
 }
 
-const DanmakuPlayer = forwardRef<DanmakuHandle, { children: React.ReactNode }>(({ 
+const DanmakuPlayer = forwardRef<DanmakuHandle, { children: React.ReactNode }>(({
     children,
 }, ref) => {
-    const stageRef = useRef<HTMLDivElement>(null); 
+    const stageRef = useRef<HTMLDivElement>(null);
     const cmRef = useRef<any>(null);
     const socketRef = useRef<Socket | null>(null);
     const { config, updateStatus } = useSettingsConfigContext();
@@ -93,7 +94,7 @@ const DanmakuPlayer = forwardRef<DanmakuHandle, { children: React.ReactNode }>((
                 tokenName: tokenName,
                 token: token,
             },
-            transports: ['websocket', 'polling'] 
+            transports: ['websocket', 'polling']
         });
 
         socket.on('connect', () => {
@@ -110,6 +111,38 @@ const DanmakuPlayer = forwardRef<DanmakuHandle, { children: React.ReactNode }>((
 
         socket.on('danmaku', (data: RawDanmakuData) => {
             console.log('收到弹幕:', data);
+
+            if (data.text.includes("🎆")) {
+                {
+                    const duration = 5 * 1000
+                    const animationEnd = Date.now() + duration
+                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+
+                    const randomInRange = (min: number, max: number) =>
+                        Math.random() * (max - min) + min
+
+                    const interval = window.setInterval(() => {
+                        const timeLeft = animationEnd - Date.now()
+
+                        if (timeLeft <= 0) {
+                            return clearInterval(interval)
+                        }
+
+                        const particleCount = 50 * (timeLeft / duration)
+                        confetti({
+                            ...defaults,
+                            particleCount,
+                            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                        })
+                        confetti({
+                            ...defaults,
+                            particleCount,
+                            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                        })
+                    }, 250)
+                }
+            }
+
             if (cmRef.current) {
                 cmRef.current.send({
                     text: data.text,
@@ -147,15 +180,15 @@ const DanmakuPlayer = forwardRef<DanmakuHandle, { children: React.ReactNode }>((
     };
 
     return (
-        <div className="abp" style={{ 
-            position: 'relative', 
+        <div className="abp" style={{
+            position: 'relative',
             // width: '100%', 
             // height: '100%',
             overflow: 'hidden'
         }}>
-            <div 
-                ref={stageRef} 
-                className="container !max-w-none " 
+            <div
+                ref={stageRef}
+                className="container !max-w-none "
                 style={{
                     position: 'absolute',
                     top: 0,

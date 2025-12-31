@@ -11,7 +11,7 @@ import {
   PaintBucket,
   Brush,
   View,
-  Bot,
+  PartyPopper,
 } from "lucide-react";
 import Canvas, { CanvasRef } from "./Canvas";
 import Dock from "./Dock";
@@ -458,6 +458,17 @@ const Board = () => {
     toast.success("弹幕已发送");
   };
 
+  const handleSendFireworks = () => {
+    danmakuRef.current?.send({
+      text: "🎆",
+      mode: 1,
+      size: 25,
+      color: 0xFFFFFF,
+      username: user?.displayName || user?.name || user?.username || "Guest"
+    });
+    toast.success("烟花已发送");
+  };
+
   const handleMove = (loc) => {
     setLocation(loc);
   };
@@ -604,20 +615,24 @@ const Board = () => {
           />
           <div className="absolute bottom-4 mx-auto flex gap-3 items-center">
             <div className={cn(
-              "flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 pl-3 rounded-full border shadow-sm",
+              "flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 pl-3 rounded-full border shadow-sm transition-all duration-500",
               editable ? "" : "opacity-30",
               "hover:opacity-100 delay-1000 hover:delay-0",
             )}>
               <Input
                 className="h-6 w-32 border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm"
-                placeholder="发送弹幕..."
+                placeholder="发送弹幕或烟花..."
                 value={danmakuText}
                 onChange={(e) => setDanmakuText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendDanmaku()}
               />
-              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full" onClick={handleSendDanmaku}>
-                <Send className="h-3 w-3" />
-              </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full" onClick={handleSendDanmaku}>
+                    <Send className="h-3 w-3" />
+                </Button>
+                {/* <div className="w-[1px] h-3 bg-border mx-1" /> */}
+                <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-orange-100/20" onClick={handleSendFireworks} title="发送烟花">
+                    <PartyPopper className="h-3 w-3" />
+                </Button>
             </div>
             <Button
               variant="outline"
