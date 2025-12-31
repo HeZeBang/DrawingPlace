@@ -12,6 +12,8 @@ import {
   PaintRoller,
   Palette,
   Settings,
+  MessageSquare,
+  MessageSquareOff,
 } from "lucide-react";
 import { Input } from "./ui/input";
 import {
@@ -50,8 +52,12 @@ const Dock = ({
   handleDraw,
 }) => {
   const { config } = useRuntimeConfigContext();
-  const { status: statusConfig, updateStatus: updateStatusConfig } =
-    useSettingsConfigContext();
+  const {
+    config: settingsConfig,
+    updateConfig: updateSettingsConfig,
+    status: statusConfig,
+    updateStatus: updateStatusConfig,
+  } = useSettingsConfigContext();
   if (!dataSource) return null;
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -140,6 +146,25 @@ const Dock = ({
         {statusConfig.currentViewMode === ViewMode.Mix && (
           <Eye className="h-4 w-4" />
         )}
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 px-2 rounded-full py-0 border-none"
+        disabled={!statusConfig.isDanmakuConnected}
+        onClick={() => {
+          updateSettingsConfig({
+            enableDanmaku: !settingsConfig.enableDanmaku,
+          });
+        }}
+      >
+        {settingsConfig.enableDanmaku ? (
+          <MessageSquare className="h-4 w-4" />
+        ) : (
+          <MessageSquareOff className="h-4 w-4" />
+        )}
+        <span className="min-w-fit">弹幕{statusConfig.isDanmakuConnected? (settingsConfig.enableDanmaku? "已开启":"已关闭") : "加载中"}</span>
       </Button>
 
       <AutoDrawModal handleDraw={handleDraw}>
