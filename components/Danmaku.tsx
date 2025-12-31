@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-// 确保包名和路径正确。如果是原生 CCL，路径通常是 'comment-core-library/dist/style.css'
 import { CommentManager } from '@wiidede/comment-core-library';
 import 'comment-core-library/dist/css/style.css'; 
 
@@ -12,16 +11,11 @@ const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         if (!stageRef.current) return;
 
-        // 1. 初始化管理器
         const cm = new CommentManager(stageRef.current);
         cm.init();
         cm.start();
 
-        // 2. 这里的逻辑很重要：如果容器初始宽度是 0，CCL 会出 Bug
-        // 使用 setTimeout 确保在 DOM 渲染完成后计算边界
-        // const timer = setTimeout(() => {
-            cm.setBounds();
-        // }, 100);
+        cm.setBounds();
 
         cmRef.current = cm;
 
@@ -29,7 +23,6 @@ const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
         window.addEventListener('resize', handleResize);
 
         return () => {
-            // clearTimeout(timer);
             cm.stop();
             window.removeEventListener('resize', handleResize);
         };
@@ -48,7 +41,6 @@ const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        /* 1. 外层必须加 abp 类名，因为 CCL 的 CSS 很多是 .abp .container ... */
         <div className="abp" style={{ 
             position: 'relative', 
             // width: '100%', 
