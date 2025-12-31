@@ -67,12 +67,7 @@ const DanmakuPlayer = ({
 
     // Socket connection
     useEffect(() => {
-        if (!activityId || !rootPath || !config.enableDanmaku) {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-                socketRef.current = null;
-                updateStatus({ isDanmakuConnected: false });
-            }
+        if (!activityId || !rootPath) {
             return;
         }
 
@@ -123,7 +118,7 @@ const DanmakuPlayer = ({
                 updateStatus({ isDanmakuConnected: false });
             }
         };
-    }, [activityId, tokenName, token, rootPath, socketPath, config.enableDanmaku]);
+    }, [activityId, tokenName, token, rootPath, socketPath]);
 
     const sendTestComment = () => {
         if (cmRef.current) {
@@ -155,7 +150,7 @@ const DanmakuPlayer = ({
                     height: '100%',
                     pointerEvents: 'none',
                     zIndex: 20,
-                    display: config.enableDanmaku ? 'block' : 'none'
+                    visibility: config.enableDanmaku ? 'visible' : 'hidden'
                 }}
             />
             {children}
