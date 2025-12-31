@@ -451,8 +451,8 @@ const Board = () => {
       text: danmakuText,
       mode: 1,
       size: 25,
-      color: 0xFFFFFF,
-      username: user?.displayName || user?.name || user?.username || "Guest"
+      color: 0xffffff,
+      username: user?.displayName || user?.name || user?.username || "Guest",
     });
     setDanmakuText("");
     toast.success("弹幕已发送");
@@ -463,8 +463,8 @@ const Board = () => {
       text: "🎆",
       mode: 1,
       size: 25,
-      color: 0xFFFFFF,
-      username: user?.displayName || user?.name || user?.username || "Guest"
+      color: 0xffffff,
+      username: user?.displayName || user?.name || user?.username || "Guest",
     });
     toast.success("烟花已发送");
   };
@@ -543,7 +543,9 @@ const Board = () => {
             onTransformed={(e) => setRatio(e.state.scale)}
             doubleClick={{ disabled: true }}
           >
-            <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+            <TransformComponent
+              wrapperStyle={{ width: "100%", height: "100%" }}
+            >
               <div
                 className="bg-background shadow-2xl border border-border"
                 style={{
@@ -561,7 +563,9 @@ const Board = () => {
                   onDraw={handleDraw}
                   editable={pointsLeft > 0 && editable}
                   opacity={
-                    statusConfig.currentViewMode !== ViewMode.MapOnly ? "1" : "0"
+                    statusConfig.currentViewMode !== ViewMode.MapOnly
+                      ? "1"
+                      : "0"
                   }
                 />
                 {settingsConfig.useOverlay && (
@@ -614,25 +618,45 @@ const Board = () => {
             }}
           />
           <div className="absolute bottom-4 mx-auto flex gap-3 items-center">
-            <div className={cn(
-              "flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 pl-3 rounded-full border shadow-sm transition-all duration-500",
-              editable ? "" : "opacity-30",
-              "hover:opacity-100 delay-1000 hover:delay-0",
-            )}>
+            <div
+              className={cn(
+                "flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 pl-3 rounded-full border shadow-sm transition-all duration-500",
+                editable ? "" : "opacity-30",
+                "hover:opacity-100 delay-1000 hover:delay-0",
+              )}
+            >
               <Input
                 className="h-6 w-32 border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm"
-                placeholder="发送弹幕或烟花..."
+                placeholder={
+                  statusConfig.isConnected
+                    ? "发送弹幕或烟花..."
+                    : "弹幕加载中..."
+                }
                 value={danmakuText}
+                disabled={!statusConfig.isConnected}
                 onChange={(e) => setDanmakuText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendDanmaku()}
+                onKeyDown={(e) => e.key === "Enter" && handleSendDanmaku()}
               />
-                <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full" onClick={handleSendDanmaku}>
-                    <Send className="h-3 w-3" />
-                </Button>
-                {/* <div className="w-[1px] h-3 bg-border mx-1" /> */}
-                <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-orange-100/20" onClick={handleSendFireworks} title="发送烟花">
-                    <PartyPopper className="h-3 w-3" />
-                </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 rounded-full"
+                disabled={!statusConfig.isConnected}
+                onClick={handleSendDanmaku}
+              >
+                <Send className="h-3 w-3" />
+              </Button>
+              {/* <div className="w-[1px] h-3 bg-border mx-1" /> */}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 rounded-full hover:bg-orange-100/20"
+                disabled={!statusConfig.isConnected}
+                onClick={handleSendFireworks}
+                title="发送烟花"
+              >
+                <PartyPopper className="h-3 w-3" />
+              </Button>
             </div>
             <Button
               variant="outline"
