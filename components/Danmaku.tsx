@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { CommentManager } from '@wiidede/comment-core-library';
 import io, { Socket } from 'socket.io-client';
 import 'comment-core-library/dist/css/style.css'; 
@@ -19,6 +19,10 @@ export interface RawDanmakuData {
   addons?: Record<string, any>;
 }
 
+export interface DanmakuHandle {
+    send: (data: any) => void;
+}
+
 interface DanmakuPlayerProps {
   children: React.ReactNode;
   activityId?: string;
@@ -28,9 +32,9 @@ interface DanmakuPlayerProps {
   socketPath?: string;
 }
 
-const DanmakuPlayer = ({ 
+const DanmakuPlayer = forwardRef<DanmakuHandle, { children: React.ReactNode }>(({ 
     children,
-}: { children: React.ReactNode }) => {
+}, ref) => {
     const stageRef = useRef<HTMLDivElement>(null); 
     const cmRef = useRef<any>(null);
     const socketRef = useRef<Socket | null>(null);
@@ -42,6 +46,16 @@ const DanmakuPlayer = ({
     const token = runtimeConfig.DANMAKU_TOKEN;
     const rootPath = runtimeConfig.DANMAKU_ROOT_PATH;
     const socketPath = runtimeConfig.DANMAKU_SOCKET_PATH;
+
+    useImperativeHandle(ref, () => ({
+        send: (data: any) => {
+            if (socketRef.current && socketRef.current.connected) {
+                socketRef.current.emit("push", data);
+            } else {
+                // toast.error("弹幕服务未连接");
+            }
+        }
+    }));
 
     useEffect(() => {
         if (!stageRef.current) return;
@@ -162,6 +176,6 @@ const DanmakuPlayer = ({
             </button> */}
         </div>
     );
-};
+});
 
 export default DanmakuPlayer;

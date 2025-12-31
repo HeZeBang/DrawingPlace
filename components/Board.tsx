@@ -30,7 +30,9 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import AnnounceModal from "./AnnounceModal";
 import { parseInitData } from "@/lib/binary-parser";
-import DanmakuPlayer from "./Danmaku";
+import DanmakuPlayer, { DanmakuHandle } from "./Danmaku";
+import { Input } from "./ui/input";
+import { Send } from "lucide-react";
 
 const Board = () => {
   const { config } = useRuntimeConfigContext();
@@ -69,6 +71,8 @@ const Board = () => {
   const bufferRef = useRef<any[]>([]);
   const socketRef = useRef(null);
   const lastActionCountRef = useRef(0);
+  const danmakuRef = useRef<DanmakuHandle>(null);
+  const [danmakuText, setDanmakuText] = useState("");
 
   useEffect(() => {
     setTitle(process.env.META_TITLE || document.title || "Drawing Place");
@@ -440,6 +444,20 @@ const Board = () => {
     ],
   );
 
+  const handleSendDanmaku = () => {
+    if (!danmakuText.trim()) return;
+
+    danmakuRef.current?.send({
+      text: danmakuText,
+      mode: 1,
+      size: 25,
+      color: 0xFFFFFF,
+      username: user?.displayName || user?.name || user?.username || "Guest"
+    });
+    setDanmakuText("");
+    toast.success("弹幕已发送");
+  };
+
   const handleMove = (loc) => {
     setLocation(loc);
   };
@@ -497,7 +515,7 @@ const Board = () => {
       </div>
 
       {/* Canvas Area - Flexible */}
-      <DanmakuPlayer>
+      <DanmakuPlayer ref={danmakuRef}>
         <div className="h-full w-full overflow-hidden relative bg-muted/20 flex items-center justify-center">
           <TransformWrapper
             initialScale={1}
@@ -584,7 +602,23 @@ const Board = () => {
               setShowAnnounce(false);
             }}
           />
-          <div className="absolute bottom-4 mx-auto flex gap-3">
+          <div className="absolute bottom-4 mx-auto flex gap-3 items-center">
+            <div className={cn(
+              "flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 pl-3 rounded-full border shadow-sm",
+              editable ? "" : "opacity-30",
+              "hover:opacity-100 delay-1000 hover:delay-0",
+            )}>
+              <Input
+                className="h-6 w-32 border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm"
+                placeholder="发送弹幕..."
+                value={danmakuText}
+                onChange={(e) => setDanmakuText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendDanmaku()}
+              />
+              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full" onClick={handleSendDanmaku}>
+                <Send className="h-3 w-3" />
+              </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
