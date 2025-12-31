@@ -2,11 +2,46 @@
 
 import React, { useEffect, useRef } from 'react';
 import { CommentManager } from '@wiidede/comment-core-library';
+import io, { Socket } from 'socket.io-client';
 import 'comment-core-library/dist/css/style.css'; 
+import { useSettingsConfigContext } from "./SettingsProvider";
+import { useRuntimeConfigContext } from "./RuntimeConfigProvider";
+import { toast } from 'sonner';
 
-const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
+export interface RawDanmakuData {
+  id?: number;
+  text: string;
+  mode: number;
+  size: number;
+  color: number;
+  time: number;
+  dur?: number;
+  addons?: Record<string, any>;
+}
+
+interface DanmakuPlayerProps {
+  children: React.ReactNode;
+  activityId?: string;
+  tokenName?: string;
+  token?: string;
+  rootPath?: string;
+  socketPath?: string;
+}
+
+const DanmakuPlayer = ({ 
+    children,
+}: { children: React.ReactNode }) => {
     const stageRef = useRef<HTMLDivElement>(null); 
     const cmRef = useRef<any>(null);
+    const socketRef = useRef<Socket | null>(null);
+    const { config, updateStatus } = useSettingsConfigContext();
+    const { config: runtimeConfig } = useRuntimeConfigContext();
+
+    const activityId = runtimeConfig.DANMAKU_ACTIVITY_ID;
+    const tokenName = runtimeConfig.DANMAKU_TOKEN_NAME;
+    const token = runtimeConfig.DANMAKU_TOKEN;
+    const rootPath = runtimeConfig.DANMAKU_ROOT_PATH;
+    const socketPath = runtimeConfig.DANMAKU_SOCKET_PATH;
 
     useEffect(() => {
         if (!stageRef.current) return;
@@ -15,8 +50,10 @@ const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
         cm.init();
         cm.start();
 
-        cm.setBounds();
+        // 动态调整弹幕缩放比例，基于屏幕宽度
+        // cm.options.scroll.scale = Math.round(document.body.clientWidth / 500);
 
+        cm.setBounds();
         cmRef.current = cm;
 
         const handleResize = () => cm.setBounds();
@@ -27,6 +64,66 @@ const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
+
+    // Socket connection
+    useEffect(() => {
+        if (!activityId || !rootPath || !config.enableDanmaku) {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+                updateStatus({ isDanmakuConnected: false });
+            }
+            return;
+        }
+
+        // 注意：Namespace 是 /danmaku
+        const socket = io(`${rootPath}/danmaku`, {
+            path: socketPath,
+            query: {
+                activity: activityId,
+                tokenName: tokenName,
+                token: token,
+            },
+            transports: ['websocket', 'polling'] 
+        });
+
+        socket.on('connect', () => {
+            console.log(`已连接到弹幕服务器 (Activity: ${activityId})`);
+            // toast.info("已连接到弹幕服务器");
+            updateStatus({ isDanmakuConnected: true });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('与弹幕服务器断开连接');
+            toast.warning("与弹幕服务器断开连接");
+            updateStatus({ isDanmakuConnected: false });
+        });
+
+        socket.on('danmaku', (data: RawDanmakuData) => {
+            console.log('收到弹幕:', data);
+            if (cmRef.current) {
+                cmRef.current.send({
+                    text: data.text,
+                    mode: data.mode,
+                    size: data.size,
+                    color: data.color,
+                    dur: data.dur * 2,
+                    stime: data.time,
+                    shadow: data.color === 0xffffff,
+                    ...data.addons
+                });
+            }
+        });
+
+        socketRef.current = socket;
+
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                updateStatus({ isDanmakuConnected: false });
+            }
+        };
+    }, [activityId, tokenName, token, rootPath, socketPath, config.enableDanmaku]);
 
     const sendTestComment = () => {
         if (cmRef.current) {
@@ -57,7 +154,8 @@ const DanmakuPlayer = ({ children }: { children: React.ReactNode }) => {
                     width: '100%',
                     height: '100%',
                     pointerEvents: 'none',
-                    zIndex: 20
+                    zIndex: 20,
+                    display: config.enableDanmaku ? 'block' : 'none'
                 }}
             />
             {children}
