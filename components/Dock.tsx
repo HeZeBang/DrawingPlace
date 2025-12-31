@@ -164,7 +164,14 @@ const Dock = ({
         ) : (
           <MessageSquareOff className="h-4 w-4" />
         )}
-        <span className="min-w-fit">弹幕{statusConfig.isDanmakuConnected? (settingsConfig.enableDanmaku? "已开启":"已关闭") : "加载中"}</span>
+        <span className="min-w-fit">
+          弹幕
+          {statusConfig.isDanmakuConnected
+            ? settingsConfig.enableDanmaku
+              ? "已开启"
+              : "已关闭"
+            : "加载中"}
+        </span>
       </Button>
 
       <AutoDrawModal handleDraw={handleDraw}>
