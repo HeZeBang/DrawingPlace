@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 ffmpeg_log.txt
 timelapse.mp4
+final_composite.png
