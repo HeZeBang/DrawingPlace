@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { error: "Invalid input", details: result.error.format() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,12 +48,11 @@ export async function POST(request: NextRequest) {
     await Vote.findByIdAndUpdate(voteId, { $inc: { likes: 1 } });
 
     return NextResponse.json({ success: true, liked: true });
-
   } catch (error) {
     console.error("Error liking vote:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -70,7 +69,10 @@ export async function DELETE(request: NextRequest) {
     const voteId = searchParams.get("voteId");
 
     if (!voteId) {
-      return NextResponse.json({ error: "Missing voteId parameter" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing voteId parameter" },
+        { status: 400 },
+      );
     }
 
     await dbConnect();
@@ -86,12 +88,11 @@ export async function DELETE(request: NextRequest) {
     await Vote.findByIdAndUpdate(voteId, { $inc: { likes: -1 } });
 
     return NextResponse.json({ success: true, liked: false });
-
   } catch (error) {
     console.error("Error unliking vote:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
