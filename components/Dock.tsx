@@ -189,11 +189,12 @@ const Dock = ({
       <Link href="/evaluation">
         <Button
           variant="outline"
-          size="icon"
-          className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
-          title="Evaluation"
+          size="sm"
+          className="h-8 px-2 rounded-full py-0 border-none bg-yellow-200 hover:bg-yellow-50 hover:shadow-xl transition-all"
+          title="投票"
         >
-          <Trophy className="h-4 w-4" />
+          <Trophy className="h-4 w-4 fill-yellow-400 stroke-yellow-900" />
+          <span className="min-w-fit animate-pulse text-yellow-900">点击进入投票</span>
         </Button>
       </Link>
 
