@@ -14,6 +14,7 @@ import {
   Plus,
   Loader2,
   Heart,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,6 +75,17 @@ export default function EvaluationPage() {
     setToken(t);
     fetchVotes(t);
   }, []);
+
+  // Auto-refresh votes every 60 seconds
+  useEffect(() => {
+    if (!token) return;
+    
+    const intervalId = setInterval(() => {
+      fetchVotes(token);
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(intervalId);
+  }, [token]);
 
   const fetchVotes = async (authToken: string | null) => {
     setLoading(true);
@@ -401,7 +413,14 @@ export default function EvaluationPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="font-bold text-lg">Evaluation & Voting</h1>
-        <div className="w-10" /> {/* Spacer */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => token && fetchVotes(token)}
+          disabled={!token || loading}
+        >
+          <RefreshCw className={cn("h-5 w-5", loading && "animate-spin")} />
+        </Button>
       </div>
 
       {/* Main Content */}
@@ -570,7 +589,7 @@ export default function EvaluationPage() {
                         setCropperEnabled(!v); 
                       }}
                       className={cn(
-                        "flex gap-2 items-center justify-center min-w-16 w-fit h-14 rounded-lg border-2 transition-all",
+                        "flex flex-col items-center justify-center min-w-16 w-fit h-14 rounded-lg border-2 transition-all",
                         isSelected 
                           ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
                           : "border-gray-300 dark:border-zinc-700",
@@ -580,7 +599,7 @@ export default function EvaluationPage() {
                       {hasVote ? (
                         <>
                           <Check size={16} className="text-green-600" />
-                          <div className="flex items-center gap-0.5 text-[10px] text-red-400">
+                          <div className="flex items-center gap-0.5 text-[10px] text-red-400 font-mono">
                             <Heart className="h-3 w-3" />{vote.likes || 0}
                           </div>
                         </>
