@@ -17,6 +17,7 @@ const VoteSchema = z.object({
   y: z.number().min(0),
   width: z.number().positive().max(MAX_CANVAS_SIZE),
   height: z.number().positive().max(MAX_CANVAS_SIZE),
+  comment: z.string().max(500).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { voteIndex, x, y, width, height } = result.data;
+    const { voteIndex, x, y, width, height, comment } = result.data;
 
     await dbConnect();
 
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
         y, 
         width, 
         height,
+        comment: comment ?? "",
         updatedAt: new Date()
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }

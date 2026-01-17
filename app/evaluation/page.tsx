@@ -13,8 +13,11 @@ import {
   Trash2,
   Plus,
   Loader2,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import CommentsModal from "@/components/CommentsModal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -24,13 +27,24 @@ interface Vote {
   y: number;
   width: number;
   height: number;
+  comment?: string;
+  likes?: number;
 }
 
 interface HeatmapVote {
+  _id: string;
   x: number;
   y: number;
   width: number;
   height: number;
+  comment?: string;
+  likes?: number;
+}
+
+interface TopComment {
+  _id: string;
+  text: string;
+  likes: number;
 }
 
 export default function EvaluationPage() {
@@ -39,10 +53,16 @@ export default function EvaluationPage() {
   const [loading, setLoading] = useState(true);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [allVotes, setAllVotes] = useState<HeatmapVote[]>([]);
+  const [myLikedVoteIds, setMyLikedVoteIds] = useState<string[]>([]);
+  
+  // Modal State for comments
+  const [commentsModalOpen, setCommentsModalOpen] = useState(false);
+  const [modalComments, setModalComments] = useState<{_id: string; comment: string; likes: number; isLiked: boolean}[]>([]);
   
   // View State
   const [viewMode, setViewMode] = useState<"mine" | "all">("mine");
   const [selectedSlot, setSelectedSlot] = useState<number>(0); // 0, 1, 2
+  const [commentText, setCommentText] = useState("");
   
   // Cropper State
   const cropperRef = useRef<CropperRef>(null);
@@ -68,6 +88,7 @@ export default function EvaluationPage() {
         const data = await res.json();
         setVotes(data.myVotes || []);
         setAllVotes(data.allVotes || []);
+        setMyLikedVoteIds(data.myLikedVoteIds || []);
       } else {
         toast.error("Failed to load votes");
       }
@@ -79,22 +100,24 @@ export default function EvaluationPage() {
     }
   };
 
-  // Sync cropper with selected slot
+  // Sync cropper and comment with selected slot
   useEffect(() => {
-    if (viewMode === "mine" && cropperRef.current) {
+    if (viewMode === "mine") {
       const vote = votes.find((v) => v.voteIndex === selectedSlot);
       if (vote) {
-        cropperRef.current.setCoordinates({
-          left: vote.x,
-          top: vote.y,
-          width: vote.width,
-          height: vote.height,
-        });
+        if (cropperRef.current) {
+          cropperRef.current.setCoordinates({
+            left: vote.x,
+            top: vote.y,
+            width: vote.width,
+            height: vote.height,
+          });
+        }
+        setCommentText(vote.comment || "");
         setCropperEnabled(false); // View mode initially
       } else {
-        // No vote for this slot, default to center or similar?
-        // Cropper loads with default full image or centered.
-        // We probably want to enable editing immediately if empty or just wait for user interaction
+        // No vote for this slot
+        setCommentText("");
         setCropperEnabled(true); 
       }
     }
@@ -123,6 +146,7 @@ export default function EvaluationPage() {
           y: Math.round(coords.top),
           width: Math.round(coords.width),
           height: Math.round(coords.height),
+          comment: commentText.trim(),
         }),
       });
 
@@ -152,6 +176,7 @@ export default function EvaluationPage() {
       if (res.ok) {
         toast.success("Vote removed");
         fetchVotes(token);
+        setCommentText("");
         setCropperEnabled(true); // Reset to edit mode for empty slot
       } else {
         toast.error("Failed to delete");
@@ -161,12 +186,55 @@ export default function EvaluationPage() {
     }
   };
 
+  const handleLikeToggle = async (voteId: string, isCurrentlyLiked: boolean) => {
+    if (!token) {
+      toast.error("Please login to like comments");
+      return;
+    }
+    try {
+      const url = isCurrentlyLiked 
+        ? `/api/evaluation/like?voteId=${voteId}` 
+        : "/api/evaluation/like";
+      
+      const res = await fetch(url, {
+        method: isCurrentlyLiked ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        ...(isCurrentlyLiked ? {} : { body: JSON.stringify({ voteId }) }),
+      });
+      
+      if (res.ok) {
+        // Refresh votes data
+        fetchVotes(token);
+        // Update modal comments locally for immediate feedback
+        setModalComments(prev => prev.map(c => 
+          c._id === voteId 
+            ? { ...c, isLiked: !isCurrentlyLiked, likes: c.likes + (isCurrentlyLiked ? -1 : 1) }
+            : c
+        ));
+        // Update myLikedVoteIds
+        setMyLikedVoteIds(prev => 
+          isCurrentlyLiked 
+            ? prev.filter(id => id !== voteId) 
+            : [...prev, voteId]
+        );
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to update like");
+      }
+    } catch (e) {
+      toast.error("Error updating like");
+    }
+  };
+
   const currentVote = votes.find((v) => v.voteIndex === selectedSlot);
 
   const [heatmapCanvas, setHeatmapCanvas] = useState<HTMLCanvasElement | null>(null);
   const [heatmapData, setHeatmapData] = useState<Uint8ClampedArray | null>(null);
   const [heatmapWidth, setHeatmapWidth] = useState(0);
-  const [hoverInfo, setHoverInfo] = useState<{ x: number, y: number, count: number } | null>(null);
+  const [hoverInfo, setHoverInfo] = useState<{ x: number, y: number, count: number, topComments: TopComment[], trueX: number, trueY: number } | null>(null);
   const lastUpdateRef = useRef(0);
 
   // Heatmap Illustration Effect
@@ -295,7 +363,25 @@ export default function EvaluationPage() {
         const index = (trueY * heatmapWidth + trueX) * 4;
         if (index < heatmapData.length) {
             const count = heatmapData[index]; // Red channel has the count
-            setHoverInfo({ x: clientX, y: clientY, count });
+            
+            // Get comments if we have a significant number of votes or any votes
+            let topComments: TopComment[] = [];
+            if (count > 0) {
+              const relevantVotes = allVotes.filter(v => 
+                 v.comment && 
+                 v.x <= trueX && trueX < v.x + v.width && 
+                 v.y <= trueY && trueY < v.y + v.height
+              );
+              
+              // Sort by likes desc, then take top 3
+              // Use default 0 for likes if undefined
+              topComments = relevantVotes
+                .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+                .slice(0, 3)
+                .map(v => ({ _id: v._id, text: v.comment as string, likes: v.likes || 0 }));
+            }
+
+            setHoverInfo({ x: clientX, y: clientY, count, topComments, trueX, trueY });
             return;
         }
     }
@@ -363,8 +449,8 @@ export default function EvaluationPage() {
                   <div 
                     className="relative cursor-crosshair"
                     onClick={handleHeatmapInteraction}
-                    onMouseMove={handleHeatmapInteraction}
-                    onMouseLeave={() => setHoverInfo(null)}
+                    // onMouseMove={handleHeatmapInteraction}
+                    // onMouseLeave={() => setHoverInfo(null)}
                   >
                     {/* Use standard img tag but ensure it displays natural size so coordinates match */}
                     <img src="/map_result.png" alt="Map" className="pointer-events-none select-none max-w-none" style={{
@@ -382,14 +468,50 @@ export default function EvaluationPage() {
              {/* Tooltip */}
              {hoverInfo && (
                 <div 
-                    className="fixed pointer-events-none z-50 px-3 py-1.5 bg-black/80 text-white text-xs rounded shadow-lg backdrop-blur-sm transition-all duration-75 border border-white/10"
+                    className="fixed z-50 px-3 py-2 bg-black/90 text-white text-xs rounded shadow-lg backdrop-blur-sm transition-all duration-75 border border-white/10 max-w-xs cursor-pointer"
                     style={{ 
                         left: hoverInfo.x + 15, 
                         top: hoverInfo.y + 15,
                         transform: 'translate(0, 0)'
                     }}
+                    onClick={() => {
+                      // Open modal with all comments for this location
+                      const relevantVotes = allVotes.filter(v => 
+                         v.comment && 
+                         hoverInfo.trueX >= v.x && hoverInfo.trueX < v.x + v.width && 
+                         hoverInfo.trueY >= v.y && hoverInfo.trueY < v.y + v.height
+                      );
+                      const comments = relevantVotes
+                        .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+                        .map(v => ({
+                          _id: v._id,
+                          comment: v.comment as string,
+                          likes: v.likes || 0,
+                          isLiked: myLikedVoteIds.includes(v._id)
+                        }));
+                      setModalComments(comments);
+                      setCommentsModalOpen(true);
+                    }}
                 >
-                    <span className="font-bold text-yellow-400">{hoverInfo.count}</span> votes here
+                    <div className="font-bold text-yellow-400 mb-1">{hoverInfo.count} vote(s)</div>
+                    {hoverInfo.topComments.length > 0 && (
+                      <div className="flex flex-col gap-1 border-t border-white/20 pt-1 mt-1">
+                        {hoverInfo.topComments.map((c, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2 text-gray-200">
+                             <span className="truncate">
+                               <span className="text-gray-400 mr-1">•</span>
+                               {c.text.length > 10 ? c.text.slice(0, 10) + "..." : c.text}
+                             </span>
+                             <span className="flex items-center gap-0.5 text-red-400 shrink-0">
+                               <Heart className="h-2.5 w-2.5" />{c.likes}
+                             </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {hoverInfo.topComments.length > 0 && (
+                      <div className="text-[10px] text-gray-400 mt-1 text-center">点击查看所有完整评论或点赞</div>
+                    )}
                 </div>
              )}
           </div>
@@ -412,7 +534,7 @@ export default function EvaluationPage() {
               )}
             >
               <User size={16} />
-              My Votes
+              我的投票
             </button>
             <button
               onClick={() => setViewMode("all")}
@@ -424,7 +546,7 @@ export default function EvaluationPage() {
               )}
             >
               <Layers size={16} />
-              Global Heatmap
+              热力图
             </button>
           </div>
 
@@ -434,7 +556,8 @@ export default function EvaluationPage() {
               {/* Slot Selectors */}
               <div className="flex gap-2 justify-center">
                 {[0, 1, 2].map((idx) => {
-                  const hasVote = votes.some(v => v.voteIndex === idx);
+                  const vote = votes.find(v => v.voteIndex === idx);
+                  const hasVote = !!vote;
                   const isSelected = selectedSlot === idx;
                   return (
                     <button
@@ -443,50 +566,77 @@ export default function EvaluationPage() {
                         setSelectedSlot(idx);
                         // If switching to a slot that has a vote, disable editing initially
                         const v = votes.find(vote => vote.voteIndex === idx);
+                        setCommentText(v?.comment || "");
                         setCropperEnabled(!v); 
                       }}
                       className={cn(
-                        "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all",
+                        "flex gap-2 items-center justify-center min-w-16 w-fit h-14 rounded-lg border-2 transition-all",
                         isSelected 
                           ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
                           : "border-gray-300 dark:border-zinc-700",
                         hasVote && !isSelected && "bg-green-500/10 border-green-500/50"
                       )}
                     >
-                      {hasVote ? <Check size={20} className="text-green-600" /> : <span className="text-sm font-bold text-gray-400">{idx + 1}</span>}
+                      {hasVote ? (
+                        <>
+                          <Check size={16} className="text-green-600" />
+                          <div className="flex items-center gap-0.5 text-[10px] text-red-400">
+                            <Heart className="h-3 w-3" />{vote.likes || 0}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-sm font-bold text-gray-400">{idx + 1}</span>
+                      )}
                     </button>
                   );
                 })}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2">
-                {currentVote && !cropperEnabled ? (
-                   <Button 
-                    className="flex-1" 
-                    onClick={() => setCropperEnabled(true)}
-                  >
-                    Modify Selection {selectedSlot + 1}
-                  </Button>
-                ) : (
-                  <Button 
-                    className="flex-1" 
-                    onClick={handleSave}
-                    disabled={!token}
-                  >
-                   {currentVote ? "Update Selection" : "Confirm Selection"} {selectedSlot + 1}
-                  </Button>
-                )}
-                
-                {currentVote && (
-                  <Button 
-                    variant="destructive" 
-                    size="icon"
-                    onClick={handleDelete}
-                  >
-                    <Trash2 size={18} />
-                  </Button>
-                )}
+              <div className="flex flex-col gap-2">
+                 {/* Comment Input */}
+                 <div className="relative">
+                   <Textarea
+                     placeholder="在你的投票中说点什么……（可选）"
+                     value={commentText}
+                     onChange={(e) => setCommentText(e.target.value)}
+                     className="resize-none text-xs"
+                     maxLength={100}
+                     disabled={!cropperEnabled}
+                   />
+                   <div className="absolute bottom-1 right-2 text-[10px] text-gray-400">
+                     {commentText.length}/100
+                   </div>
+                 </div>
+
+                 <div className="flex gap-2">
+                    {currentVote && !cropperEnabled ? (
+                    <Button 
+                        className="flex-1" 
+                        onClick={() => setCropperEnabled(true)}
+                    >
+                        Modify Selection {selectedSlot + 1}
+                    </Button>
+                    ) : (
+                    <Button 
+                        className="flex-1" 
+                        onClick={handleSave}
+                        disabled={!token}
+                    >
+                    {currentVote ? "Update Selection" : "Confirm Selection"} {selectedSlot + 1}
+                    </Button>
+                    )}
+                    
+                    {currentVote && (
+                    <Button 
+                        variant="destructive" 
+                        size="icon"
+                        onClick={handleDelete}
+                    >
+                        <Trash2 size={18} />
+                    </Button>
+                    )}
+                 </div>
               </div>
               
               {!token && (
@@ -496,14 +646,25 @@ export default function EvaluationPage() {
           )}
 
            {viewMode === "all" && (
-             <div className="text-center text-sm text-gray-500 py-2">
-               Showing accumulated selections from all users (including you). 
+             <div className="text-center text-sm text-muted-foreground py-2">
+               热度更大的区域越清晰，反之越灰白
                <br/>
-               Popular areas are clearer and revealed through the white mask.
+               点击任意点可以查看该点的最热评论和投票详情
+               <br/>
+               点击悬浮框查看完整评论并进行点赞
              </div>
            )}
         </div>
       </div>
+      
+      {/* Comments Modal */}
+      <CommentsModal
+        isOpen={commentsModalOpen}
+        onClose={() => setCommentsModalOpen(false)}
+        comments={modalComments}
+        token={token}
+        onLikeToggle={handleLikeToggle}
+      />
     </div>
   );
 }

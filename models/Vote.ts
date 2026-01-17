@@ -7,6 +7,8 @@ export interface IVote extends Document {
   y: number;
   width: number;
   height: number;
+  comment?: string;
+  likes: number;
   updatedAt: Date;
 }
 
@@ -18,6 +20,8 @@ const schema = new Schema<IVote>(
     y: { type: Number, required: true },
     width: { type: Number, required: true },
     height: { type: Number, required: true },
+    comment: { type: String, maxLength: 500 },
+    likes: { type: Number, default: 0 },
     updatedAt: { type: Date, default: Date.now },
   },
   {
