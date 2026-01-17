@@ -14,7 +14,9 @@ import {
   Settings,
   MessageSquare,
   MessageSquareOff,
+  Trophy,
 } from "lucide-react";
+import Link from "next/link";
 import { Input } from "./ui/input";
 import {
   AlertDialog,
@@ -183,6 +185,17 @@ const Dock = ({
           <Bot className="h-4 w-4" />
         </Button>
       </AutoDrawModal>
+
+      <Link href="/evaluation">
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(`w-8 h-8 rounded-full p-0 border-none`)}
+          title="Evaluation"
+        >
+          <Trophy className="h-4 w-4" />
+        </Button>
+      </Link>
 
       <SettingsDrawer>
         <Button
