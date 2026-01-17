@@ -164,6 +164,10 @@ export default function EvaluationPage() {
   const currentVote = votes.find((v) => v.voteIndex === selectedSlot);
 
   const [heatmapCanvas, setHeatmapCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [heatmapData, setHeatmapData] = useState<Uint8ClampedArray | null>(null);
+  const [heatmapWidth, setHeatmapWidth] = useState(0);
+  const [hoverInfo, setHoverInfo] = useState<{ x: number, y: number, count: number } | null>(null);
+  const lastUpdateRef = useRef(0);
 
   // Heatmap Illustration Effect
   useEffect(() => {
@@ -203,6 +207,11 @@ export default function EvaluationPage() {
         const imgData = heatCtx.getImageData(0, 0, heatCanvas.width, heatCanvas.height);
         const data = imgData.data; // RGBA array
         
+        // Save raw vote data for tooltip lookup 
+        // We clone it because the next loop modifies 'data' in place for display
+        setHeatmapData(new Uint8ClampedArray(data)); 
+        setHeatmapWidth(heatCanvas.width);
+        
         // Find maximum overlap count (max value in Red channel)
         let maxOverlap = 0;
         for (let i = 0; i < data.length; i += 4) {
@@ -240,6 +249,63 @@ export default function EvaluationPage() {
 
     };
   }, [heatmapCanvas, allVotes, viewMode]);
+  
+  const handleHeatmapInteraction = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!heatmapData || heatmapWidth === 0) return;
+
+    // Throttle to ~30fps to avoid lag
+    const now = Date.now();
+    if (now - lastUpdateRef.current < 32) return;
+    lastUpdateRef.current = now;
+
+    // Get click coordinates relative to the original image size
+    // We need to look up the event target's bounding box and the current scale
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
+    
+    // For touches
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    // Since the image is potentially scaled by TransformWrapper, but the data is 1:1 with natural resolution,
+    // we need to know the natural size vs rendered size. 
+    // BUT: The event handler is on the WRAPPER (TransformComponent's child), which scales WITH the content.
+    // So the click coordinates (offset) on the element should be local to that element's current size?
+    // Actually, getting coordinates on a transformed element is tricky.
+    
+    // Better approach: Attach handler to the IMAGE/CANVAS itself. The click event usually reports 
+    // coordinates in screen space, and we map to element space.
+    // If the element is scaled CSS transform, rect.width will be the SCALED width.
+    
+    // Let's assume the native image width is available in heatmapWidth.
+    // Scale factor = rect.width / heatmapWidth.
+    const scaleX = heatmapWidth / rect.width;
+    // Approximating height from array length since we don't store heatmapHeight explicitly
+    // Best would be to store heatmapHeight too, but this works if rectangular
+    const estimatedHeight = heatmapData.length / 4 / heatmapWidth; 
+    const scaleY = estimatedHeight / rect.height; 
+    
+    const trueX = Math.floor(x * scaleX);
+    const trueY = Math.floor(y * scaleY);
+
+    if (trueX >= 0 && trueX < heatmapWidth) { // Basic bounds check
+        const index = (trueY * heatmapWidth + trueX) * 4;
+        if (index < heatmapData.length) {
+            const count = heatmapData[index]; // Red channel has the count
+            setHoverInfo({ x: clientX, y: clientY, count });
+            return;
+        }
+    }
+    setHoverInfo(null);
+  };
+  
+  // Clear tooltip on zoom/interaction start
+  const onInteractionStart = () => {
+      setHoverInfo(null);
+  };
 
   return (
     <div className="flex flex-col h-screen w-screen bg-gray-100 dark:bg-zinc-950 overflow-hidden">
@@ -290,9 +356,16 @@ export default function EvaluationPage() {
                 minScale={0.1}
                 maxScale={20}
                 centerOnInit
+                onPanning={onInteractionStart}
+                onZoom={onInteractionStart}
              >
                 <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-min !h-min">
-                  <div className="relative">
+                  <div 
+                    className="relative cursor-crosshair"
+                    onClick={handleHeatmapInteraction}
+                    onMouseMove={handleHeatmapInteraction}
+                    onMouseLeave={() => setHoverInfo(null)}
+                  >
                     {/* Use standard img tag but ensure it displays natural size so coordinates match */}
                     <img src="/map_result.png" alt="Map" className="pointer-events-none select-none max-w-none" style={{
                         imageRendering: 'pixelated',
@@ -305,6 +378,20 @@ export default function EvaluationPage() {
                   </div>
                 </TransformComponent>
              </TransformWrapper>
+             
+             {/* Tooltip */}
+             {hoverInfo && (
+                <div 
+                    className="fixed pointer-events-none z-50 px-3 py-1.5 bg-black/80 text-white text-xs rounded shadow-lg backdrop-blur-sm transition-all duration-75 border border-white/10"
+                    style={{ 
+                        left: hoverInfo.x + 15, 
+                        top: hoverInfo.y + 15,
+                        transform: 'translate(0, 0)'
+                    }}
+                >
+                    <span className="font-bold text-yellow-400">{hoverInfo.count}</span> votes here
+                </div>
+             )}
           </div>
         )}
       </div>
