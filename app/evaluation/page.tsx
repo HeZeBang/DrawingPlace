@@ -50,7 +50,7 @@ interface TopComment {
 
 export default function EvaluationPage() {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [allVotes, setAllVotes] = useState<HeatmapVote[]>([]);
@@ -71,33 +71,43 @@ export default function EvaluationPage() {
   const cropperRef = useRef<CropperRef>(null);
   const [cropperEnabled, setCropperEnabled] = useState(false);
 
-  // Initialize Auth
+  // Initialize Auth - get userId from casdoor_user
   useEffect(() => {
-    const t = localStorage.getItem("draw_token");
-    setToken(t);
-    fetchVotes(t);
+    const storedUser = localStorage.getItem("casdoor_user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        const id = user.id || user.sub || user.name;
+        setUserId(id);
+        fetchVotes(id);
+      } catch (e) {
+        console.error("Invalid casdoor_user data");
+        fetchVotes(null);
+      }
+    } else {
+      fetchVotes(null);
+    }
   }, []);
 
   // Auto-refresh votes every 60 seconds
   useEffect(() => {
-    if (!token) return;
+    if (!userId) return;
 
     const intervalId = setInterval(() => {
-      fetchVotes(token);
+      fetchVotes(userId);
     }, 60000); // 60 seconds
 
     return () => clearInterval(intervalId);
-  }, [token]);
+  }, [userId]);
 
-  const fetchVotes = async (authToken: string | null) => {
+  const fetchVotes = async (uid: string | null) => {
     setLoading(true);
     try {
-      const headers: Record<string, string> = {};
-      if (authToken) {
-        headers["Authorization"] = `Bearer ${authToken}`;
-      }
+      const url = uid 
+        ? `/api/evaluation/votes?userId=${encodeURIComponent(uid)}`
+        : "/api/evaluation/votes";
 
-      const res = await fetch("/api/evaluation/votes", { headers });
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setVotes(data.myVotes || []);
@@ -138,7 +148,7 @@ export default function EvaluationPage() {
   }, [selectedSlot, votes, viewMode]);
 
   const handleSave = async () => {
-    if (!token) {
+    if (!userId) {
       toast.error("Please login to vote");
       return;
     }
@@ -152,9 +162,9 @@ export default function EvaluationPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          userId,
           voteIndex: selectedSlot,
           x: Math.round(coords.left),
           y: Math.round(coords.top),
@@ -166,7 +176,7 @@ export default function EvaluationPage() {
 
       if (res.ok) {
         toast.success("Vote saved!");
-        fetchVotes(token);
+        fetchVotes(userId);
         setCropperEnabled(false);
       } else {
         const err = await res.json();
@@ -178,18 +188,15 @@ export default function EvaluationPage() {
   };
 
   const handleDelete = async () => {
-    if (!token) return;
+    if (!userId) return;
     try {
-      const res = await fetch(`/api/evaluation/vote?index=${selectedSlot}`, {
+      const res = await fetch(`/api/evaluation/vote?userId=${encodeURIComponent(userId)}&index=${selectedSlot}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       if (res.ok) {
         toast.success("Vote removed");
-        fetchVotes(token);
+        fetchVotes(userId);
         setCommentText("");
         setCropperEnabled(true); // Reset to edit mode for empty slot
       } else {
@@ -204,27 +211,26 @@ export default function EvaluationPage() {
     voteId: string,
     isCurrentlyLiked: boolean,
   ) => {
-    if (!token) {
+    if (!userId) {
       toast.error("Please login to like comments");
       return;
     }
     try {
       const url = isCurrentlyLiked
-        ? `/api/evaluation/like?voteId=${voteId}`
+        ? `/api/evaluation/like?userId=${encodeURIComponent(userId)}&voteId=${voteId}`
         : "/api/evaluation/like";
 
       const res = await fetch(url, {
         method: isCurrentlyLiked ? "DELETE" : "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        ...(isCurrentlyLiked ? {} : { body: JSON.stringify({ voteId }) }),
+        ...(isCurrentlyLiked ? {} : { body: JSON.stringify({ userId, voteId }) }),
       });
 
       if (res.ok) {
         // Refresh votes data
-        fetchVotes(token);
+        fetchVotes(userId);
         // Update modal comments locally for immediate feedback
         setModalComments((prev) =>
           prev.map((c) =>
@@ -464,8 +470,8 @@ export default function EvaluationPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => token && fetchVotes(token)}
-          disabled={!token || loading}
+          onClick={() => userId && fetchVotes(userId)}
+          disabled={loading}
         >
           <RefreshCw className={cn("h-5 w-5", loading && "animate-spin")} />
         </Button>
@@ -729,7 +735,7 @@ export default function EvaluationPage() {
                     <Button
                       className="flex-1"
                       onClick={handleSave}
-                      disabled={!token}
+                      disabled={!userId}
                     >
                       {currentVote ? "Update Selection" : "Confirm Selection"}{" "}
                       {selectedSlot + 1}
@@ -748,7 +754,7 @@ export default function EvaluationPage() {
                 </div>
               </div>
 
-              {!token && (
+              {!userId && (
                 <p className="text-center text-xs text-red-500">
                   Please login on the main page to vote.
                 </p>
@@ -773,7 +779,7 @@ export default function EvaluationPage() {
         isOpen={commentsModalOpen}
         onClose={() => setCommentsModalOpen(false)}
         comments={modalComments}
-        token={token}
+        userId={userId}
         onLikeToggle={handleLikeToggle}
       />
     </div>

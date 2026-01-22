@@ -2,21 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Vote from "@/models/Vote";
 import VoteLike from "@/models/VoteLike";
-import { getUserFromRequest } from "@/lib/server-auth";
 import { z } from "zod";
 
 const LikeSchema = z.object({
+  userId: z.string().min(1),
   voteId: z.string().min(1),
 });
 
 // POST - Like a vote
 export async function POST(request: NextRequest) {
   try {
-    const oderId = await getUserFromRequest(request);
-    if (!oderId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
     const result = LikeSchema.safeParse(body);
 
@@ -27,7 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { voteId } = result.data;
+    const { userId, voteId } = result.data;
+    const oderId = userId; // oderId is the liker's userId
 
     await dbConnect();
 
@@ -60,13 +56,14 @@ export async function POST(request: NextRequest) {
 // DELETE - Unlike a vote
 export async function DELETE(request: NextRequest) {
   try {
-    const oderId = await getUserFromRequest(request);
-    if (!oderId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
     const voteId = searchParams.get("voteId");
+    const oderId = userId; // oderId is the liker's userId
+
+    if (!oderId) {
+      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    }
 
     if (!voteId) {
       return NextResponse.json(

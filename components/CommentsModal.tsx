@@ -30,23 +30,23 @@ interface CommentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   comments: CommentItem[];
-  token: string | null;
+  userId: string | null;
   onLikeToggle: (voteId: string, isLiked: boolean) => Promise<void>;
 }
 
 const CommentsList = ({
   comments,
-  token,
+  userId,
   onLikeToggle,
 }: {
   comments: CommentItem[];
-  token: string | null;
+  userId: string | null;
   onLikeToggle: (voteId: string, isLiked: boolean) => Promise<void>;
 }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleLike = async (item: CommentItem) => {
-    if (!token) {
+    if (!userId) {
       toast.error("Please login to like comments");
       return;
     }
@@ -80,13 +80,13 @@ const CommentsList = ({
           </div>
           <button
             onClick={() => handleLike(item)}
-            disabled={loadingId === item._id || !token}
+            disabled={loadingId === item._id || !userId}
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all shrink-0",
               item.isLiked
                 ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                 : "bg-gray-100 dark:bg-zinc-700 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500",
-              !token && "opacity-50 cursor-not-allowed"
+              !userId && "opacity-50 cursor-not-allowed"
             )}
           >
             {loadingId === item._id ? (
@@ -108,7 +108,7 @@ const CommentsModal = ({
   isOpen,
   onClose,
   comments,
-  token,
+  userId,
   onLikeToggle,
 }: CommentsModalProps) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -122,7 +122,7 @@ const CommentsModal = ({
           </DialogHeader>
           <CommentsList
             comments={comments}
-            token={token}
+            userId={userId}
             onLikeToggle={onLikeToggle}
           />
         </DialogContent>
@@ -138,7 +138,7 @@ const CommentsModal = ({
         </DrawerHeader>
         <CommentsList
           comments={comments}
-          token={token}
+          userId={userId}
           onLikeToggle={onLikeToggle}
         />
       </DrawerContent>

@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Vote from "@/models/Vote";
 import VoteLike from "@/models/VoteLike";
-import { getUserFromRequest } from "@/lib/server-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserFromRequest(request);
-
-    // We allow fetching all votes without auth, but need auth for myVotes
-    // If not authenticated, myVotes will be empty, which is fine
+    // Get userId from query parameter (client passes their casdoor_user.id)
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
     await dbConnect();
 

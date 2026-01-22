@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Vote from "@/models/Vote";
-import { getUserFromRequest } from "@/lib/server-auth";
 import { z } from "zod";
 
 // Validation schema
-// Assuming canvas size is 1000x1000 based on typical r/place clones,
-// but we should probably verify or make it generous.
-// User prompt said: "limit just restrict width/height lower than canvas".
-// I'll set a reasonable upper bound for validation, e.g., 2000 to be safe.
 const MAX_CANVAS_SIZE = 5000;
 
 const VoteSchema = z.object({
+  userId: z.string().min(1),
   voteIndex: z.number().min(0).max(2),
   x: z.number().min(0),
   y: z.number().min(0),
@@ -22,11 +18,6 @@ const VoteSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
     const result = VoteSchema.safeParse(body);
 
@@ -37,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { voteIndex, x, y, width, height, comment } = result.data;
+    const { userId, voteIndex, x, y, width, height, comment } = result.data;
 
     await dbConnect();
 
@@ -69,13 +60,13 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
     const indexParam = searchParams.get("index");
+
+    if (!userId) {
+      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    }
 
     if (indexParam === null) {
       return NextResponse.json(
