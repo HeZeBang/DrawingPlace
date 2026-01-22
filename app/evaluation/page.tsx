@@ -565,11 +565,11 @@ export default function EvaluationPage() {
             {/* Tooltip */}
             {hoverInfo && (
               <div
-                className="fixed z-50 px-3 py-2 bg-black/90 text-white text-xs rounded shadow-lg backdrop-blur-sm transition-all duration-75 border border-white/10 max-w-xs cursor-pointer"
+                className="fixed z-50 px-3 py-2 bg-black/90 text-white text-xs rounded shadow-lg backdrop-blur-sm transition-all duration-75 border border-white/10 max-w-[200px] cursor-pointer pointer-events-auto"
                 style={{
-                  left: hoverInfo.x + 15,
-                  top: hoverInfo.y + 15,
-                  transform: "translate(0, 0)",
+                  left: hoverInfo.x,
+                  top: hoverInfo.y,
+                  transform: `translate(${hoverInfo.x < (typeof window !== 'undefined' ? window.innerWidth / 2 : 500) ? '15px' : 'calc(-100% - 15px)'}, ${hoverInfo.y > (typeof window !== 'undefined' ? window.innerHeight * 0.7 : 500) ? 'calc(-100% - 15px)' : '15px'})`,
                 }}
                 onClick={() => {
                   // Open modal with all comments for this location
